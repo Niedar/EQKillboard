@@ -1,0 +1,2 @@
+# EQKillboard
+Everquest killboard
