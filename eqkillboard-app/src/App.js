@@ -31,21 +31,10 @@ class App extends Component {
           {({ loading, error, data}) => {
             if (loading) return 'Loading...';
             if (error) return `Error! ${error.message}`;
-
+            
             return (
-              data.allKillmails.nodes.map(killmail => {
-                let victimGuildName = killmail.guildByVictimGuildId ? killmail.guildByVictimGuildId.name : '';
-                let victimLevel = killmail.victimLevel ? killmail.victimLevel : 'Unknown level';
-                let attackerGuildName = killmail.guildByAttackerGuildId ? killmail.guildByAttackerGuildId.name : '';
-                let attackerLevel = killmail.attackerLevel ? killmail.attackerLevel : 'Unknown level';
-
-                return (
-                  <p>
-                {killmail.killedAt}: {killmail.characterByVictimId.name} ({victimLevel}) &lt;{victimGuildName}&gt; has been killed by {killmail.characterByAttackerId.name} ({attackerLevel}) &lt;{attackerGuildName}&gt; in {killmail.zoneByZoneId.name}
-                  </p>
-                )
-              })
-            );
+              <Killmails killmails={data.allKillmails.nodes} />
+            )
           }}
         </Query>
       </div>
