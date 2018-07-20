@@ -1,0 +1,5 @@
+%syntax-version=1.0.0
+%project=eqkillboard-database
+%uri=https://github.com/Niedar/EQKillboard
+
+0001_initial_schema 2018-07-19T19:50:14Z Niedar <Niedar@gmail.com> # Create the initial database schema for EQKillboard
