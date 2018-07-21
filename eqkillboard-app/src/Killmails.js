@@ -23,7 +23,7 @@ class Killmails extends Component {
         let killmails = killmailsGroupedByKilledAt[dateKey];
         return (
           <div>
-            <h1>{dateKey}</h1>
+            <h2>{dateKey}</h2>
             <Table dataSource={killmails} rowKey="nodeId" pagination={false}>
               <Column 
                 title="Time"

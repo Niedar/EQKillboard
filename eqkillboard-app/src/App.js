@@ -9,7 +9,7 @@ const { Header, Footer, Sider, Content } = Layout;
 class App extends Component {
   render() {
     return (
-      <div style={{ width: '60%', margin: '0 auto', background: '#fafafa' }}>
+      <div style={{ width: '58%', margin: '0 auto', background: '#fafafa' }}>
         <Layout style={{ minHeight: '100vh' }}>
           <Header><h1 style={{color: "white"}}>EQKillboard</h1></Header>
           <Layout>
