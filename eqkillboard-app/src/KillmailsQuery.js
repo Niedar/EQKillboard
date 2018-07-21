@@ -33,8 +33,8 @@ fragment KillmailData on Killmail {
 `;
 
 const GET_ALLKILLMAILS = gql`
-  {
-    allKillmails(orderBy: KILLED_AT_DESC, first: 50) {
+  query allKilmails($after: Cursor, $before: Cursor){
+    allKillmails(orderBy: KILLED_AT_DESC, first: 50, after: $after, before: $before) {
       nodes {
         ...KillmailData
       }    
@@ -45,7 +45,7 @@ const GET_ALLKILLMAILS = gql`
 
 export default class KillmailsQuery extends Component {
   render() {
-    const { character_id, guild_id, zone_id, children } = this.props
+    const { character_id, guild_id, zone_id, children, after, before } = this.props
     var query;
     var id;
 
@@ -60,18 +60,9 @@ export default class KillmailsQuery extends Component {
     }
 
     return (
-      <Query query={query} variables={{ id }}>
+      <Query query={query} variables={{ after, before }}>
         {result => children(result)}
       </Query>
     )
   }
 }
-
-const query = gql`
-  query User($id: String!) {
-    user(id: $id) {
-      id
-      name
-    }
-  }
-`

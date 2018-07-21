@@ -1,20 +1,23 @@
 import React, { Component } from 'react';
 import { Table } from 'antd';
-import Moment from 'react-moment';
 import moment from 'moment';
 import groupBy from 'lodash/groupBy';
 
 const { Column } = Table;
 
-const groupKillmailsByKilledAt = killmails => {
-  return groupBy(killmails, (killmail) => {
-    return moment(killmail.killedAt).format("LL");
-  });
-};
-
 class Killmails extends Component {
+  groupKillmailsByKilledAt = killmails => {
+    return groupBy(killmails, (killmail) => {
+      return moment(killmail.killedAt).format("LL");
+    });
+  };
+
+  getLocalTime = dateTimeWithTimeZone => {
+    return moment(dateTimeWithTimeZone).local().format("LT");
+  }
+
   render() {
-    var killmailsGroupedByKilledAt = groupKillmailsByKilledAt(this.props.killmails);
+    var killmailsGroupedByKilledAt = this.groupKillmailsByKilledAt(this.props.killmails);
     return (
       Object.keys(killmailsGroupedByKilledAt).map(dateKey => {
         let killmails = killmailsGroupedByKilledAt[dateKey];
@@ -28,7 +31,7 @@ class Killmails extends Component {
                 key="killedAt"
                 render={(text, record) => (
                   // TODO: This needs to be displayed in local time
-                  <Moment interval={0} format="LT">{record.killedAt}</Moment>
+                  this.getLocalTime(record.killedAt)
                 )}
               />
               <Column

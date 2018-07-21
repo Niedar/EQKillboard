@@ -43,4 +43,6 @@ INSERT INTO killmail (victim_id, victim_guild_id, victim_level, attacker_id, att
 (3, 2, NULL, 1, 4, NULL, 1, '2018-07-01 14:47:00+02');
 
 
+
+
 COMMIT;
