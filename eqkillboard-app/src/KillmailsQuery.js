@@ -34,7 +34,7 @@ fragment KillmailData on Killmail {
 
 const GET_ALLKILLMAILS = gql`
   {
-    allKillmails(orderBy: KILLED_AT_DESC) {
+    allKillmails(orderBy: KILLED_AT_DESC, first: 50) {
       nodes {
         ...KillmailData
       }    

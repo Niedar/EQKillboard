@@ -10,7 +10,7 @@ class App extends Component {
   render() {
     return (
       <div style={{ width: '65%', margin: '0 auto', background: '#fafafa' }}>
-        <Layout style={{ height: '100vh' }}>
+        <Layout style={{ minHeight: '100vh' }}>
           <Header><h1 style={{color: "white"}}>EQKillboard</h1></Header>
           <Layout>
             <Content>
