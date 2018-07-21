@@ -1,39 +1,7 @@
 import React, { Component } from 'react';
 import { Table } from 'antd';
-import gql from 'graphql-tag';
 
 const { Column } = Table;
-
-export const KillmailDataFragment = gql`
-fragment KillmailData on Killmail {
-  nodeId
-  id,
-  characterByVictimId {
-    id,
-    name
-  },
-  guildByVictimGuildId {
-    id, 
-    name
-  },
-  victimLevel,
-  characterByAttackerId {
-    id,
-    name
-  },
-  guildByAttackerGuildId {
-    id,
-    name
-  },
-  attackerLevel,
-  zoneByZoneId {
-    id,
-    name
-  },
-  killedAt  
-}
-`;
-
 class Killmails extends Component {
   render() {
     return (
