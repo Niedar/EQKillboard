@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import { Layout } from 'antd';
+import { Route, Switch, Redirect } from 'react-router-dom'
 import KillmailsQuery from './KillmailsQuery';
 import Killmails from './Killmails';
+import HomePage from './HomePage';
 import logo from './logo.svg';
 import './App.css';
 
@@ -14,16 +16,14 @@ class App extends Component {
           <Header><h1 style={{color: "white"}}>EQKillboard</h1></Header>
           <Layout>
             <Content>
-              <KillmailsQuery after={this.props.match.params.after}>
-                {({ loading, error, data}) => {
-                  if (loading) return 'Loading...';
-                  if (error) return `Error! ${error.message}`;
-                  
-                  return (
-                    <Killmails killmails={data.allKillmails.nodes} />
-                  );
-                }}
-              </KillmailsQuery>
+              <Switch>
+                <Route exact path="/" component={HomePage}/>
+                <Route path="/:cursorDirection(before|after)/:cursor" component={HomePage}/>
+
+                <Route>
+                  <Redirect to="/" />
+                </Route>
+              </Switch>
             </Content>
             {/* <Sider></Sider> */}
           </Layout>

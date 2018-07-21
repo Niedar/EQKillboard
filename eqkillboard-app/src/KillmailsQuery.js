@@ -37,6 +37,12 @@ const GET_ALLKILLMAILS = gql`
     allKillmails(orderBy: KILLED_AT_DESC, first: 50, after: $after, before: $before) {
       nodes {
         ...KillmailData
+      },
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor,
+        endCursor
       }    
     }
   }
