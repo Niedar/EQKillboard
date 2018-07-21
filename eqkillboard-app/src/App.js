@@ -1,30 +1,34 @@
 import React, { Component } from 'react';
+import { Layout } from 'antd';
 import KillmailsQuery from './KillmailsQuery';
 import Killmails from './Killmails';
 import logo from './logo.svg';
 import './App.css';
 
+const { Header, Footer, Sider, Content } = Layout;
 class App extends Component {
   render() {
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">Welcome to React</h1>
-        </header>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
-        <KillmailsQuery>
-          {({ loading, error, data}) => {
-            if (loading) return 'Loading...';
-            if (error) return `Error! ${error.message}`;
-            
-            return (
-              <Killmails killmails={data.allKillmails.nodes} />
-            );
-          }}
-        </KillmailsQuery>
+      <div style={{ width: '65%', margin: '0 auto', background: '#fafafa' }}>
+        <Layout style={{ height: '100vh' }}>
+          <Header><h1 style={{color: "white"}}>EQKillboard</h1></Header>
+          <Layout>
+            <Content>
+              <KillmailsQuery>
+                {({ loading, error, data}) => {
+                  if (loading) return 'Loading...';
+                  if (error) return `Error! ${error.message}`;
+                  
+                  return (
+                    <Killmails killmails={data.allKillmails.nodes} />
+                  );
+                }}
+              </KillmailsQuery>
+            </Content>
+            {/* <Sider></Sider> */}
+          </Layout>
+          <Footer></Footer>
+        </Layout>
       </div>
     );
   }

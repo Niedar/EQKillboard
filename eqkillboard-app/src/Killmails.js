@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Table } from 'antd';
+import Moment from 'react-moment';
 
 const { Column } = Table;
 class Killmails extends Component {
@@ -12,6 +13,10 @@ class Killmails extends Component {
             title="Time"
             dataIndex="killedAt"
             key="killedAt"
+            render={(text, record) => (
+              // TODO: This needs to be displayed in local time
+              <Moment interval={0} format="LT">{record.killedAt}</Moment>
+            )}
           />
           <Column
             title="Zone"
@@ -60,6 +65,10 @@ class Killmails extends Component {
             title="Time"
             dataIndex="killedAt"
             key="killedAt"
+            render={(text, record) => (
+              // TODO: This needs to be displayed in local time
+              <Moment interval={0} format="LT">{record.killedAt}</Moment>
+            )}
           />
           <Column
             title="Zone"
