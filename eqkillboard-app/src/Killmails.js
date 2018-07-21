@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
-import { Query } from 'react-apollo';
+import { Table } from 'antd';
 import gql from 'graphql-tag';
+
+const { Column } = Table;
 
 export const KillmailDataFragment = gql`
 fragment KillmailData on Killmail {
@@ -35,20 +37,105 @@ fragment KillmailData on Killmail {
 class Killmails extends Component {
   render() {
     return (
-      this.props.killmails.map(killmail => {
-        let victimGuildName = killmail.guildByVictimGuildId ? killmail.guildByVictimGuildId.name : '';
-        let victimLevel = killmail.victimLevel ? killmail.victimLevel : 'Unknown level';
-        let attackerGuildName = killmail.guildByAttackerGuildId ? killmail.guildByAttackerGuildId.name : '';
-        let attackerLevel = killmail.attackerLevel ? killmail.attackerLevel : 'Unknown level';
-  
-        return (
-          <p>
-            {killmail.killedAt}: {killmail.characterByVictimId.name} ({victimLevel}) &lt;{victimGuildName}&gt; has been killed by {killmail.characterByAttackerId.name} ({attackerLevel}) &lt;{attackerGuildName}&gt; in {killmail.zoneByZoneId.name}
-          </p>
-        )
-      })
-    )
-
+      <div>
+        <h1>Jun 21, 2018</h1>
+        <Table dataSource={this.props.killmails} rowKey="nodeId" pagination={false}>
+          <Column 
+            title="Time"
+            dataIndex="killedAt"
+            key="killedAt"
+          />
+          <Column
+            title="Zone"
+            dataIndex="zoneByZoneId"
+            key="zoneByZoneId"
+            render={(text, record) => (
+              <a href="javascript:;">{record.zoneByZoneId.name}</a>
+            )}
+          /> 
+          <Column
+            title="Victim"
+            dataIndex="characterByVictimId"
+            key="characterByVictimId"
+            render={(text, record) => (
+              <a href="javascript:;">{record.characterByVictimId.name} ({record.victimLevel ? record.victimLevel : 'Unknown level'})</a>
+            )}
+          />
+          <Column
+            title="Victim Guild"
+            dataIndex="guildByVictimGuildId"
+            key="guildByVictimGuildId"
+            render={(text, record) => (
+              <a href="javascript:;">{record.guildByVictimGuildId ? record.guildByVictimGuildId.name : ''}</a>
+            )}
+          />        
+          <Column
+            title="Attacker"
+            dataIndex="characterByAttackerId"
+            key="characterByAttackerId"
+            render={(text, record) => (
+              <a href="javascript:;">{record.characterByAttackerId.name} ({record.attackerLevel ? record.attackerLevel : 'Unknown level'})</a>
+            )}
+          />
+          <Column
+            title="Attacker Guild"
+            dataIndex="guildByAttackerGuildId"
+            key="guildByAttackerGuildId"
+            render={(text, record) => (
+              <a href="javascript:;">{record.guildByAttackerGuildId ? record.guildByAttackerGuildId.name : ''}</a>
+            )}
+          />     
+        </Table>
+        <h1>Jun 20, 2018</h1>
+        <Table dataSource={this.props.killmails} rowKey="nodeId" pagination={false}>
+          <Column 
+            title="Time"
+            dataIndex="killedAt"
+            key="killedAt"
+          />
+          <Column
+            title="Zone"
+            dataIndex="zoneByZoneId"
+            key="zoneByZoneId"
+            render={(text, record) => (
+              <a href="javascript:;">{record.zoneByZoneId.name}</a>
+            )}
+          /> 
+          <Column
+            title="Victim"
+            dataIndex="characterByVictimId"
+            key="characterByVictimId"
+            render={(text, record) => (
+              <a href="javascript:;">{record.characterByVictimId.name} ({record.victimLevel ? record.victimLevel : 'Unknown level'})</a>
+            )}
+          />
+          <Column
+            title="Victim Guild"
+            dataIndex="guildByVictimGuildId"
+            key="guildByVictimGuildId"
+            render={(text, record) => (
+              <a href="javascript:;">{record.guildByVictimGuildId ? record.guildByVictimGuildId.name : ''}</a>
+            )}
+          />        
+          <Column
+            title="Attacker"
+            dataIndex="characterByAttackerId"
+            key="characterByAttackerId"
+            render={(text, record) => (
+              <a href="javascript:;">{record.characterByAttackerId.name} ({record.attackerLevel ? record.attackerLevel : 'Unknown level'})</a>
+            )}
+          />
+          <Column
+            title="Attacker Guild"
+            dataIndex="guildByAttackerGuildId"
+            key="guildByAttackerGuildId"
+            render={(text, record) => (
+              <a href="javascript:;">{record.guildByAttackerGuildId ? record.guildByAttackerGuildId.name : ''}</a>
+            )}
+          />     
+        </Table>
+      </div>
+    );
   }
 }
 

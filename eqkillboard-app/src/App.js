@@ -34,7 +34,7 @@ class App extends Component {
             
             return (
               <Killmails killmails={data.allKillmails.nodes} />
-            )
+            );
           }}
         </Query>
       </div>
