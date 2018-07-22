@@ -5,6 +5,7 @@ import HomePage from './HomePage';
 import CharacterPage from './CharacterPage';
 import GuildPage from './GuildPage';
 import './App.css';
+import SiteHeader from './SiteHeader';
 
 const { Header, Footer, Sider, Content } = Layout;
 class App extends Component {
@@ -12,7 +13,7 @@ class App extends Component {
     return (
       <div style={{ width: '58%', margin: '0 auto', background: '#fafafa' }}>
         <Layout style={{ minHeight: '100vh' }}>
-          <Header><h1 style={{color: "white"}}>EQKillboard</h1></Header>
+          <SiteHeader />
           <Layout>
             <Content>
               <Switch>

@@ -4,7 +4,6 @@ BEGIN;
 
 CREATE EXTENSION pg_trgm;
 
-
 -- guild
 CREATE TABLE guild (
     id SERIAL PRIMARY KEY,
@@ -13,11 +12,13 @@ CREATE TABLE guild (
 CREATE INDEX guild_name_trgm_index ON guild USING gin (name gin_trgm_ops);
 
 CREATE FUNCTION search_guilds(search TEXT) RETURNS SETOF guild AS $$
-  SELECT guild.*
-  FROM guild
-  WHERE guild.name % search
-  ORDER BY similarity(guild.name, search)
-  LIMIT 10;
+    SELECT set_limit(0.1);
+
+    SELECT guild.*
+    FROM guild
+    WHERE guild.name % search
+    ORDER BY similarity(guild.name, search) DESC
+    LIMIT 10;
 $$ LANGUAGE SQL STABLE;
 
 
@@ -29,11 +30,13 @@ CREATE TABLE zone (
 CREATE INDEX zone_name_trgm_index ON zone USING gin (name gin_trgm_ops);
 
 CREATE FUNCTION search_zones(search TEXT) RETURNS SETOF zone AS $$
-  SELECT zone.*
-  FROM zone
-  WHERE zone.name % search
-  ORDER BY similarity(zone.name, search)
-  LIMIT 10;
+    SELECT set_limit(0.1);
+
+    SELECT zone.*
+    FROM zone
+    WHERE zone.name % search
+    ORDER BY similarity(zone.name, search) DESC
+    LIMIT 10;
 $$ LANGUAGE SQL STABLE;
 
 
@@ -45,11 +48,13 @@ CREATE TABLE class (
 CREATE INDEX class_name_trgm_index ON class USING gin (name gin_trgm_ops);
 
 CREATE FUNCTION search_classes(search TEXT) RETURNS SETOF class AS $$
-  SELECT class.*
-  FROM class
-  WHERE class.name % search
-  ORDER BY similarity(class.name, search)
-  LIMIT 10;
+    SELECT set_limit(0.1);
+
+    SELECT class.*
+    FROM class
+    WHERE class.name % search
+    ORDER BY similarity(class.name, search) DESC
+    LIMIT 10;
 $$ LANGUAGE SQL STABLE;
 
 
@@ -71,11 +76,13 @@ CREATE TABLE character (
 CREATE INDEX character_name_trgm_index ON character USING gin (name gin_trgm_ops);
 
 CREATE FUNCTION search_characters(search TEXT) RETURNS SETOF public.character AS $$
-  SELECT character.*
-  FROM character
-  WHERE character.name % search
-  ORDER BY similarity(character.name, search)
-  LIMIT 10;
+    SELECT set_limit(0.1);
+    
+    SELECT character.*
+    FROM character
+    WHERE character.name % search
+    ORDER BY similarity(character.name, search) DESC
+    LIMIT 10;
 $$ LANGUAGE SQL STABLE;
 
 

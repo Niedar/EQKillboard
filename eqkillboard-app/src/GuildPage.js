@@ -56,6 +56,7 @@ class GuildPage extends Component {
           
           return (
             <div>
+              <h1>Guild {this.props.match.params.guildId}</h1>
               <Killmails killmails={data.allKillmails.nodes} />
               { getPaginationButtons(data.allKillmails.pageInfo) }
             </div>

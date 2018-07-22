@@ -50,14 +50,14 @@ class Killmails extends Component {
                   <a href="javascript:;">{record.characterByVictimId.name} ({record.victimLevel ? record.victimLevel : 'Unknown level'})</a>
                 )}
               />
-              <Column
+              {/* <Column
                 title="Victim Guild"
                 dataIndex="guildByVictimGuildId"
                 key="guildByVictimGuildId"
                 render={(text, record) => (
                   <a href="javascript:;">{record.guildByVictimGuildId ? record.guildByVictimGuildId.name : ''}</a>
                 )}
-              />        
+              />         */}
               <Column
                 title="Attacker"
                 dataIndex="characterByAttackerId"
@@ -66,14 +66,14 @@ class Killmails extends Component {
                   <a href="javascript:;">{record.characterByAttackerId.name} ({record.attackerLevel ? record.attackerLevel : 'Unknown level'})</a>
                 )}
               />
-              <Column
+              {/* <Column
                 title="Attacker Guild"
                 dataIndex="guildByAttackerGuildId"
                 key="guildByAttackerGuildId"
                 render={(text, record) => (
                   <a href="javascript:;">{record.guildByAttackerGuildId ? record.guildByAttackerGuildId.name : ''}</a>
                 )}
-              />     
+              />      */}
             </Table>
           </div>
         )

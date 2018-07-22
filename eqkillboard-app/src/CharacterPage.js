@@ -56,6 +56,7 @@ class CharacterPage extends Component {
           
           return (
             <div>
+              <h1>Character {this.props.match.params.characterId}</h1>
               <Killmails killmails={data.allKillmails.nodes} />
               { getPaginationButtons(data.allKillmails.pageInfo) }
             </div>

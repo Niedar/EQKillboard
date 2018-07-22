@@ -55,6 +55,7 @@ class HomePage extends Component {
           
           return (
             <div>
+              <h1>Latest Killmails</h1>
               <Killmails killmails={data.allKillmails.nodes} />
               { getPaginationButtons(data.allKillmails.pageInfo) }
             </div>
