@@ -1,10 +1,9 @@
 import React, { Component } from 'react';
 import { Layout } from 'antd';
 import { Route, Switch, Redirect } from 'react-router-dom'
-import KillmailsQuery from './KillmailsQuery';
-import Killmails from './Killmails';
 import HomePage from './HomePage';
-import logo from './logo.svg';
+import CharacterPage from './CharacterPage';
+import GuildPage from './GuildPage';
 import './App.css';
 
 const { Header, Footer, Sider, Content } = Layout;
@@ -19,7 +18,10 @@ class App extends Component {
               <Switch>
                 <Route exact path="/" component={HomePage}/>
                 <Route path="/:cursorDirection(before|after)/:cursor" component={HomePage}/>
-
+                <Route exact path="/character/:characterId" component={CharacterPage}/>
+                <Route exact path="/character/:characterId/:cursorDirection(before|after)/:cursor" component={CharacterPage}/>
+                <Route exact path="/guild/:guildId" component={GuildPage}/>
+                <Route exact path="/guild/:guildId/:cursorDirection(before|after)/:cursor" component={GuildPage}/>
                 <Route>
                   <Redirect to="/" />
                 </Route>
