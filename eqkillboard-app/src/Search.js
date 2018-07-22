@@ -1,109 +1,103 @@
 import React, { Component } from 'react';
-import Autosuggest from 'react-autosuggest';
+import { Icon, Input, AutoComplete } from 'antd';
 import { withApollo } from 'react-apollo';
 import gql from "graphql-tag"
 
+const Option = AutoComplete.Option;
+const OptGroup = AutoComplete.OptGroup;
 
-// Imagine you have a list of languages that you'd like to autosuggest.
-const languages = [
-  {
-    name: 'C',
-    year: 1972
-  },
-  {
-    name: 'Elm',
-    year: 2012
-  },
-];
+function renderTitle(title) {
+  return (
+    <span>
+      {title}
+    </span>
+  );
+}
 
-// Teach Autosuggest how to calculate suggestions for any given input value.
-const getSuggestions = (apolloClient, value) => {
-    return apolloClient.query({
-        query: GET_SEARCHALL,
-        variables: { searchText: value}
-    }).then(result => {
-        let results = [];
-        if (result.data) {
-            results = results.concat(result.data.searchCharacters.nodes.map(node => { return {name: node.name}}));
-            results =results.concat(result.data.searchGuilds.nodes.map(node => {return {name: node.name}}));
-        }
-        return results;
-    })
+const createOptions = dataSource =>  {
+    return dataSource.map(group => (
+    <OptGroup
+        key={group.title}
+        label={renderTitle(group.title)}
+    >
+        {group.children.map(opt => (
+        <Option key={opt.title} value={opt.title}>
+            {opt.title}
+            {/* <span className="certain-search-item-count">{opt.count} 人 关注</span> */}
+        </Option>
+        ))}
+    </OptGroup>
+    ))
 };
 
-// When suggestion is clicked, Autosuggest needs to populate the input
-// based on the clicked suggestion. Teach Autosuggest how to calculate the
-// input value for every given suggestion.
-const getSuggestionValue = suggestion => suggestion.name;
-
-// Use your imagination to render suggestions.
-const renderSuggestion = suggestion => (
-  <div>
-    {suggestion.name}
-  </div>
-);
-
 class Search extends React.Component {
-  constructor() {
-    super();
+    constructor() {
+        super();
 
-    // Autosuggest is a controlled component.
-    // This means that you need to provide an input value
-    // and an onChange handler that updates this value (see below).
-    // Suggestions also need to be provided to the Autosuggest,
-    // and they are initially empty because the Autosuggest is closed.
-    this.state = {
-      value: '',
-      suggestions: []
-    };
-  }
+        this.state= {
+            value: '',
+            suggestions: []
+        }
+    }
+    onSearch = value => {
+        console.log(value);
 
-  onChange = (event, { newValue }) => {
-    this.setState({
-      value: newValue
-    });
-  };
-
-  // Autosuggest will call this function every time you need to update suggestions.
-  // You already implemented this logic above, so just use it.
-  onSuggestionsFetchRequested = ({ value }) => {
-    getSuggestions(this.props.client, value).then(suggestions => {
+        this.props.client.query({
+            query: GET_SEARCHALL,
+            variables: { searchText: value}
+        }).then(result => {
+            var self = this;
+            let suggestions = [];
+            if (result.data) {
+                var characterGroup = {
+                    title: "Characters",
+                    children: result.data.searchCharacters.nodes.map(node => {
+                        return {
+                            title: node.name,
+                            count: 1000
+                        }
+                    })
+                }
+                var guildGroup =  {
+                    title: "Guilds",
+                    children: result.data.searchGuilds.nodes.map(node => {
+                        return {
+                            title: node.name,
+                            count: 1000
+                        }
+                    })
+                }
+                suggestions = [characterGroup, guildGroup]
+            }
+            self.setState({
+                suggestions
+            });
+        })
         this.setState({
-            suggestions: suggestions
-          });
-    })
-
-  };
-
-  // Autosuggest will call this function every time you need to clear suggestions.
-  onSuggestionsClearRequested = () => {
-    this.setState({
-      suggestions: []
-    });
-  };
-
-  render() {
-    const { value, suggestions } = this.state;
-
-    // Autosuggest will pass through all these props to the input.
-    const inputProps = {
-      placeholder: 'Type a programming language',
-      value,
-      onChange: this.onChange
-    };
-
-    // Finally, render it!
-    return (
-      <Autosuggest
-        suggestions={suggestions}
-        onSuggestionsFetchRequested={this.onSuggestionsFetchRequested}
-        onSuggestionsClearRequested={this.onSuggestionsClearRequested}
-        getSuggestionValue={getSuggestionValue}
-        renderSuggestion={renderSuggestion}
-        inputProps={inputProps}
-      />
-    );
-  }
+            value
+        })
+    }
+    render() {
+        return (
+            <div className="certain-category-search-wrapper" style={{ width: 300, float: "right" }}>
+              <AutoComplete
+                className="certain-category-search"
+                dropdownClassName="certain-category-search-dropdown"
+                dropdownMatchSelectWidth={false}
+                dropdownStyle={{ width: 300 }}
+                size="large"
+                style={{ width: '100%' }}
+                dataSource={createOptions(this.state.suggestions)}
+                placeholder="Search..."
+                optionLabelProp="value"
+                value={this.state.value}
+                onSearch={this.onSearch}
+              >
+                <Input suffix={<Icon type="search" className="certain-category-icon" />} />
+              </AutoComplete>
+            </div>
+          );
+    }
 }
 
 const GET_SEARCHALL = gql`

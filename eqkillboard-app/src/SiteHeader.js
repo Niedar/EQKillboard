@@ -12,7 +12,7 @@ class SiteHeader extends Component {
               <h1 style={{color: "white"}}>EQKillboard</h1>
             </Col>
             <Col xxl={20} xl={19} lg={16} md={16} sm={0} xs={0}>
-              <Search></Search>
+              <Search />
             </Col>
           </Row>
         </Header>
