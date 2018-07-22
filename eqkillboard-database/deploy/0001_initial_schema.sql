@@ -2,26 +2,65 @@
 
 BEGIN;
 
+CREATE EXTENSION pg_trgm;
+
+
+-- guild
 CREATE TABLE guild (
     id SERIAL PRIMARY KEY,
     name TEXT UNIQUE
 );
+CREATE INDEX guild_name_trgm_index ON guild USING gin (name gin_trgm_ops);
 
+CREATE FUNCTION search_guilds(search TEXT) RETURNS SETOF guild AS $$
+  SELECT guild.*
+  FROM guild
+  WHERE guild.name % search
+  ORDER BY similarity(guild.name, search)
+  LIMIT 10;
+$$ LANGUAGE SQL STABLE;
+
+
+-- zone
 CREATE TABLE zone (
     id SERIAL PRIMARY KEY,
     name TEXT UNIQUE
 );
+CREATE INDEX zone_name_trgm_index ON zone USING gin (name gin_trgm_ops);
 
+CREATE FUNCTION search_zones(search TEXT) RETURNS SETOF zone AS $$
+  SELECT zone.*
+  FROM zone
+  WHERE zone.name % search
+  ORDER BY similarity(zone.name, search)
+  LIMIT 10;
+$$ LANGUAGE SQL STABLE;
+
+
+-- class
 CREATE TABLE class (
     id SERIAL PRIMARY KEY,
     name TEXT UNIQUE
 );
+CREATE INDEX class_name_trgm_index ON class USING gin (name gin_trgm_ops);
 
+CREATE FUNCTION search_classes(search TEXT) RETURNS SETOF class AS $$
+  SELECT class.*
+  FROM class
+  WHERE class.name % search
+  ORDER BY similarity(class.name, search)
+  LIMIT 10;
+$$ LANGUAGE SQL STABLE;
+
+
+-- status_type
 CREATE TABLE status_type (
     id SERIAL PRIMARY KEY,
     name TEXT UNIQUE
 );
 
+
+-- character
 CREATE TABLE character (
     id SERIAL PRIMARY KEY,
     name TEXT UNIQUE,
@@ -29,7 +68,18 @@ CREATE TABLE character (
     class_id INTEGER REFERENCES class,
     level INTEGER
 );
+CREATE INDEX character_name_trgm_index ON character USING gin (name gin_trgm_ops);
 
+CREATE FUNCTION search_characters(search TEXT) RETURNS SETOF public.character AS $$
+  SELECT character.*
+  FROM character
+  WHERE character.name % search
+  ORDER BY similarity(character.name, search)
+  LIMIT 10;
+$$ LANGUAGE SQL STABLE;
+
+
+-- killmail_raw
 CREATE TABLE killmail_raw (
     id SERIAL PRIMARY KEY,
     discord_message_id NUMERIC UNIQUE NOT NULL,
@@ -39,6 +89,8 @@ CREATE TABLE killmail_raw (
 CREATE INDEX killmail_raw_discord_message_id_index ON killmail_raw(discord_message_id);
 CREATE INDEX killmail_raw_status_type_id_index ON killmail_raw(status_type_id);
 
+
+-- killmails
 CREATE TABLE killmail (
     id SERIAL PRIMARY KEY,
     victim_id INTEGER REFERENCES character NOT NULL,

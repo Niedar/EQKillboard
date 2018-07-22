@@ -2,6 +2,12 @@
 
 Everquest killboard
 
+## Postgres Installation
+```
+sudo apt-get install postgresql postgresql-contrib
+```
+
+
 ## Sqitch
 
 ```

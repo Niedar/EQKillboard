@@ -53,7 +53,6 @@ class HomePage extends Component {
           if (loading) return 'Loading...';
           if (error) return `Error! ${error.message}`;
           
-          var backLink
           return (
             <div>
               <Killmails killmails={data.allKillmails.nodes} />
