@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Icon, Input, AutoComplete } from 'antd';
 import { withApollo } from 'react-apollo';
+import { withRouter } from 'react-router-dom'
 import gql from "graphql-tag"
 
 const Option = AutoComplete.Option;
@@ -21,9 +22,8 @@ const createOptions = dataSource =>  {
         label={renderTitle(group.title)}
     >
         {group.children.map(opt => (
-        <Option key={opt.title} value={opt.title}>
+        <Option key={opt.title} value={opt.title} character_id={opt.character_id} guild_id={opt.guild_id}>
             {opt.title}
-            {/* <span className="certain-search-item-count">{opt.count} 人 关注</span> */}
         </Option>
         ))}
     </OptGroup>
@@ -40,8 +40,6 @@ class Search extends React.Component {
         }
     }
     onSearch = value => {
-        console.log(value);
-
         this.props.client.query({
             query: GET_SEARCHALL,
             variables: { searchText: value}
@@ -53,6 +51,7 @@ class Search extends React.Component {
                     title: "Characters",
                     children: result.data.searchCharacters.nodes.map(node => {
                         return {
+                            character_id: node.id,
                             title: node.name,
                             count: 1000
                         }
@@ -62,6 +61,7 @@ class Search extends React.Component {
                     title: "Guilds",
                     children: result.data.searchGuilds.nodes.map(node => {
                         return {
+                            guild_id: node.id,
                             title: node.name,
                             count: 1000
                         }
@@ -74,8 +74,21 @@ class Search extends React.Component {
             });
         })
         this.setState({
-            value
+          value
         })
+    }
+    onSelect = (value, option) => {
+      console.log(value);
+      console.log(option);
+
+      if (option.props.character_id) {
+        this.props.history.push(`/character/${option.props.character_id}`);
+      } else if (option.props.guild_id) {
+        this.props.history.push(`/guild/${option.props.guild_id}`);
+      }
+      this.setState({
+        value: ''
+      })
     }
     render() {
         return (
@@ -92,6 +105,7 @@ class Search extends React.Component {
                 optionLabelProp="value"
                 value={this.state.value}
                 onSearch={this.onSearch}
+                onSelect={this.onSelect}
               >
                 <Input suffix={<Icon type="search" className="certain-category-icon" />} />
               </AutoComplete>
@@ -117,4 +131,4 @@ query searchAll($searchText: String) {
   }
 `
 
-export default withApollo(Search);
+export default withRouter(withApollo(Search));

@@ -77,7 +77,7 @@ CREATE INDEX character_name_trgm_index ON character USING gin (name gin_trgm_ops
 
 CREATE FUNCTION search_characters(search TEXT) RETURNS SETOF public.character AS $$
     SELECT set_limit(0.1);
-    
+
     SELECT character.*
     FROM character
     WHERE character.name % search
