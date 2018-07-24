@@ -6,7 +6,13 @@ export default class KillmailsQuery extends Component {
   render() {
     const { characterId, guildId, zoneId, children, after, before } = this.props
     var query;
-    var id;
+    var id, first, last;
+
+    if (before) {
+      last = 50;
+    } else {
+      first = 50
+    }
 
     if (characterId) {
       query = GET_CHARACTERKILLMAILS;
@@ -21,7 +27,7 @@ export default class KillmailsQuery extends Component {
     }
 
     return (
-      <Query query={query} variables={{id, after, before }}>
+      <Query query={query} variables={{id, first, last, after, before }}>
         {result => children(result)}
       </Query>
     )
@@ -59,8 +65,8 @@ fragment KillmailData on Killmail {
 `;
 
 const GET_ALLKILLMAILS = gql`
-  query allKilmails($after: Cursor, $before: Cursor){
-    allKillmails(orderBy: KILLED_AT_DESC, first: 50, after: $after, before: $before) {
+  query allKilmails($first: Int, $last: Int, $after: Cursor, $before: Cursor){
+    allKillmails(orderBy: KILLED_AT_DESC, first: $first, last: $last, after: $after, before: $before) {
       nodes {
         ...KillmailData
       },
@@ -76,8 +82,8 @@ const GET_ALLKILLMAILS = gql`
 `;
 
 const GET_CHARACTERKILLMAILS = gql`
-  query characterKilmails($id: Int, $after: Cursor, $before: Cursor) {
-    allKillmails(condition: {victimId: $id}, orderBy: KILLED_AT_DESC, first: 50, after: $after, before: $before) {
+  query characterKilmails($id: Int, $first: Int, $last: Int, $after: Cursor, $before: Cursor) {
+    allKillmails(condition: {victimId: $id}, orderBy: KILLED_AT_DESC, first: $first, last: $last, after: $after, before: $before) {
       nodes {
         ...KillmailData
       },
@@ -93,8 +99,8 @@ const GET_CHARACTERKILLMAILS = gql`
 `;
 
 const GET_GUILDKILLMAILS = gql`
-  query guildKilmails($id: Int, $after: Cursor, $before: Cursor) {
-    allKillmails(condition: {victimGuildId: $id}, orderBy: KILLED_AT_DESC, first: 50, after: $after, before: $before) {
+  query guildKilmails($id: Int, $first: Int, $last: Int, $after: Cursor, $before: Cursor) {
+    allKillmails(condition: {victimGuildId: $id}, orderBy: KILLED_AT_DESC, first: $first, last: $last, after: $after, before: $before) {
       nodes {
         ...KillmailData
       },
