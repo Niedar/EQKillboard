@@ -1,0 +1,11 @@
+C:\Users\Marko\source\repos\EQKillboard\eqkillboard-discord-parser\obj\Debug\netcoreapp2.0\eqkillboard-discord-parser.csprojAssemblyReference.cache
+C:\Users\Marko\source\repos\EQKillboard\eqkillboard-discord-parser\obj\Debug\netcoreapp2.0\eqkillboard-discord-parser.csproj.CoreCompileInputs.cache
+C:\Users\Marko\source\repos\EQKillboard\eqkillboard-discord-parser\obj\Debug\netcoreapp2.0\eqkillboard-discord-parser.AssemblyInfoInputs.cache
+C:\Users\Marko\source\repos\EQKillboard\eqkillboard-discord-parser\obj\Debug\netcoreapp2.0\eqkillboard-discord-parser.AssemblyInfo.cs
+C:\Users\Marko\source\repos\EQKillboard\eqkillboard-discord-parser\bin\Debug\netcoreapp2.0\eqkillboard-discord-parser.deps.json
+C:\Users\Marko\source\repos\EQKillboard\eqkillboard-discord-parser\bin\Debug\netcoreapp2.0\eqkillboard-discord-parser.runtimeconfig.json
+C:\Users\Marko\source\repos\EQKillboard\eqkillboard-discord-parser\bin\Debug\netcoreapp2.0\eqkillboard-discord-parser.runtimeconfig.dev.json
+C:\Users\Marko\source\repos\EQKillboard\eqkillboard-discord-parser\bin\Debug\netcoreapp2.0\eqkillboard-discord-parser.dll
+C:\Users\Marko\source\repos\EQKillboard\eqkillboard-discord-parser\bin\Debug\netcoreapp2.0\eqkillboard-discord-parser.pdb
+C:\Users\Marko\source\repos\EQKillboard\eqkillboard-discord-parser\obj\Debug\netcoreapp2.0\eqkillboard-discord-parser.dll
+C:\Users\Marko\source\repos\EQKillboard\eqkillboard-discord-parser\obj\Debug\netcoreapp2.0\eqkillboard-discord-parser.pdb
