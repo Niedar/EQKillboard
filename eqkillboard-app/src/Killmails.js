@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Table } from 'antd';
 import moment from 'moment';
 import groupBy from 'lodash/groupBy';
+import {Link} from 'react-router-dom';
 
 const { Column } = Table;
 
@@ -46,34 +47,59 @@ class Killmails extends Component {
                 title="Victim"
                 dataIndex="characterByVictimId"
                 key="characterByVictimId"
-                render={(text, record) => (
-                  <a href="javascript:;">{record.characterByVictimId.name} ({record.victimLevel ? record.victimLevel : 'Unknown level'})</a>
-                )}
+                render={(text, record) => {
+                  var characterElement;
+                  var guildElement;
+
+                  characterElement = (
+                    <Link to={`/character/${record.characterByVictimId.id}`}>
+                      {record.characterByVictimId.name} ({record.victimLevel ? record.victimLevel : 'Unknown level'})
+                    </Link>                    
+                  )
+                  if (record.guildByVictimGuildId) {
+                    guildElement = (
+                      <Link to={`/guild/${record.guildByVictimGuildId.id}`}>
+                        {record.guildByVictimGuildId.name}
+                      </Link>
+                    )
+                  }
+                  return (
+                    <React.Fragment>
+                      {characterElement}
+                      <br />
+                      {guildElement}
+                    </React.Fragment>    
+                )}}
               />
-              {/* <Column
-                title="Victim Guild"
-                dataIndex="guildByVictimGuildId"
-                key="guildByVictimGuildId"
-                render={(text, record) => (
-                  <a href="javascript:;">{record.guildByVictimGuildId ? record.guildByVictimGuildId.name : ''}</a>
-                )}
-              />         */}
               <Column
                 title="Attacker"
                 dataIndex="characterByAttackerId"
                 key="characterByAttackerId"
-                render={(text, record) => (
-                  <a href="javascript:;">{record.characterByAttackerId.name} ({record.attackerLevel ? record.attackerLevel : 'Unknown level'})</a>
-                )}
+                render={(text, record) => {
+                  var characterElement;
+                  var guildElement;
+
+                  characterElement = (
+                    <Link to={`/character/${record.characterByAttackerId.id}`}>
+                      {record.characterByAttackerId.name} ({record.attackerLevel ? record.attackerLevel : 'Unknown level'})
+                    </Link>                    
+                  )
+                  if (record.guildByAttackerGuildId) {
+                    guildElement = (
+                      <Link to={`/guild/${record.guildByAttackerGuildId.id}`}>
+                        {record.guildByAttackerGuildId.name}
+                      </Link>
+                    )
+                  }
+
+                  return (
+                    <React.Fragment>
+                        {characterElement}
+                        <br />
+                        {guildElement}
+                    </React.Fragment>          
+                )}}
               />
-              {/* <Column
-                title="Attacker Guild"
-                dataIndex="guildByAttackerGuildId"
-                key="guildByAttackerGuildId"
-                render={(text, record) => (
-                  <a href="javascript:;">{record.guildByAttackerGuildId ? record.guildByAttackerGuildId.name : ''}</a>
-                )}
-              />      */}
             </Table>
           </div>
         )
