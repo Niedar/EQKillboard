@@ -24,7 +24,7 @@ class Killmails extends Component {
         let killmails = killmailsGroupedByKilledAt[dateKey];
         return (
           <div>
-            <h2>{dateKey}</h2>
+            <h2 style={{marginLeft: "10px"}}>{dateKey}</h2>
             <Table dataSource={killmails} rowKey="nodeId" pagination={false}>
               <Column 
                 title="Time"
@@ -34,6 +34,7 @@ class Killmails extends Component {
                   // TODO: This needs to be displayed in local time
                   this.getLocalTime(record.killedAt)
                 )}
+                width={75}
               />
               <Column
                 title="Zone"
@@ -42,6 +43,7 @@ class Killmails extends Component {
                 render={(text, record) => (
                   <a href="javascript:;">{record.zoneByZoneId.name}</a>
                 )}
+                width={150}
               /> 
               <Column
                 title="Victim"
@@ -70,6 +72,7 @@ class Killmails extends Component {
                       {guildElement}
                     </React.Fragment>    
                 )}}
+                width={150}
               />
               <Column
                 title="Attacker"
@@ -99,6 +102,7 @@ class Killmails extends Component {
                         {guildElement}
                     </React.Fragment>          
                 )}}
+                width={150}
               />
             </Table>
           </div>
