@@ -3,43 +3,42 @@ import { Link } from 'react-router-dom'
 import KillmailsQuery from './KillmailsQuery';
 import Killmails from './Killmails';
 import { Button, Radio, Icon } from 'antd';
-import { Spin } from 'antd';
+import { Spin, Row, Col } from 'antd';
 
 
 
 // TODO: turn this into a component
 const getPaginationButtons = (pageInfo, baseUrl) => {
+  let buttonStyle = {
+    marginTop: "20px",
+    marginRight: "20px"
+  }
   var nextButton;
   var prevButton;
 
-  if (pageInfo.hasNextPage) {
-    nextButton = (
-      <Button type="primary">
-        <Link to={`${baseUrl}/after/${pageInfo.endCursor}`}>
-          Forward<Icon type="right" />
-        </Link>
-      </Button>
-    )
-  } else {
-
-  }
-
-  if (pageInfo.hasPreviousPage) {
-    prevButton = (
-      <Button type="primary">
-        <Link to={`${baseUrl}/before/${pageInfo.startCursor}`}>
-          <Icon type="left" />Backward
-        </Link>
-      </Button>
-    )
-  } else {
-
-  }
+  nextButton = (
+    <Button type="primary" style={buttonStyle} disabled={!pageInfo.hasNextPage}>
+      <Link to={`${baseUrl}/after/${pageInfo.endCursor}`} style={{ textDecoration: "none"}}>
+        Forward<Icon type="right" />
+      </Link>
+    </Button>
+  )
+  prevButton = (
+    <Button type="primary" style={buttonStyle} disabled={!pageInfo.hasPreviousPage}>
+      <Link to={`${baseUrl}/before/${pageInfo.startCursor}`} style={{ textDecoration: "none"}}>
+        <Icon type="left" />Backward
+      </Link>
+    </Button>
+  )
 
   return (
     <React.Fragment>
-      {prevButton}
-      {nextButton}
+      <Row type={"flex"} justify={"end"}>
+        <Col>
+          {prevButton}
+          {nextButton}
+        </Col>
+      </Row>
     </React.Fragment>
   );
 };
