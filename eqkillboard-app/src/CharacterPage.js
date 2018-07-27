@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom'
 import KillmailsQuery from './KillmailsQuery';
+import CharacterInfoQuery from './CharacterInfoQuery';
 import Killmails from './Killmails';
 import { Button, Radio, Icon } from 'antd';
 import { Spin, Row, Col } from 'antd';
@@ -46,25 +47,40 @@ const getPaginationButtons = (pageInfo, baseUrl) => {
 class CharacterPage extends Component {
   render() {
     return (
-      <KillmailsQuery
-        before={this.props.match.params.cursorDirection === "before" ? this.props.match.params.cursor : null}
-        after={this.props.match.params.cursorDirection === "after" ? this.props.match.params.cursor : null}
-        characterId={this.props.match.params.characterId}
-      >
-      {({ loading, error, data}) => {
-          if (loading) return <Spin size="large" />;
-          if (error) return `Error! ${error.message}`;
-          
-          return (
-            <div>
-              <h1>Character {this.props.match.params.characterId}</h1>
-              { getPaginationButtons(data.allKillmails.pageInfo, `/character/${this.props.match.params.characterId}`) }
-              <Killmails killmails={data.allKillmails.nodes} />
-              { getPaginationButtons(data.allKillmails.pageInfo, `/character/${this.props.match.params.characterId}`) }
-            </div>
-          );
-      }}
-      </KillmailsQuery>
+      <React.Fragment>
+        <CharacterInfoQuery characterId={this.props.match.params.characterId}>
+        {({ loading, error, data}) => {
+            if (loading) return null;
+            if (error) return `Error! ${error.message}`;
+            
+            return (
+              <div style={{marginLeft: "10px"}}>
+                <h1>{data.characterById.name}</h1>
+                <h2>Kills: {data.characterById.killmailsByAttackerId.totalCount}</h2>
+                <h2>Deaths: {data.characterById.killmailsByVictimId.totalCount}</h2>
+              </div>
+            );
+        }}
+        </CharacterInfoQuery>
+        <KillmailsQuery
+          before={this.props.match.params.cursorDirection === "before" ? this.props.match.params.cursor : null}
+          after={this.props.match.params.cursorDirection === "after" ? this.props.match.params.cursor : null}
+          characterId={this.props.match.params.characterId}
+        >
+        {({ loading, error, data}) => {
+            if (loading) return <Spin size="large" />;
+            if (error) return `Error! ${error.message}`;
+            
+            return (
+              <div>
+                { getPaginationButtons(data.allKillmails.pageInfo, `/character/${this.props.match.params.characterId}`) }
+                <Killmails killmails={data.allKillmails.nodes} />
+                { getPaginationButtons(data.allKillmails.pageInfo, `/character/${this.props.match.params.characterId}`) }
+              </div>
+            );
+        }}
+        </KillmailsQuery>
+      </React.Fragment>
     );
   }
 }
