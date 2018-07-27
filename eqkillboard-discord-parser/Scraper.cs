@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,8 +18,11 @@ namespace eqkillboard_discord_parser {
         var address = charBrowserUrl + charName;
         var document = await BrowsingContext.New(config).OpenAsync(address);
         var cellSelector = "div.InventoryStats table tbody tr:nth-child(5)";
-        var cells = document.QuerySelectorAll(cellSelector);
-        var classLevel = cells.Select(m => m.TextContent).FirstOrDefault();
+        var cells = document.QuerySelector(cellSelector);
+        
+        var classLevel = cells.TextContent;//Select(m => m.TextContent).FirstOrDefault();
+
+        // Remove deity from retrieved string!!
 
         return classLevel;
     }

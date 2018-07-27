@@ -126,8 +126,7 @@ namespace eqkillboard_discord_parser
 
             DynamicParameters parameters = new DynamicParameters();
 
-            var sql = @"
-           INSERT INTO killmail_raw (discord_message_id, message) Values (@MessageId, @Message)
+            var sql = @"INSERT INTO killmail_raw (discord_message_id, message) Values (@MessageId, @Message)
            ON CONFLICT (discord_message_id) DO UPDATE
            SET message = EXCLUDED.message
            RETURNING id
@@ -148,7 +147,7 @@ namespace eqkillboard_discord_parser
             
             var killmailRawId =  parameters.Get<int>("KillmailRawId");
 
-            connection.Close();
+            //connection.Close();
 
             return killmailRawId;
         }
