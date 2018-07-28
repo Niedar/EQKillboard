@@ -64,7 +64,7 @@ namespace eqkillboard_discord_parser
         {
             if (message.Channel.Name == "yellowtext")
             {
-                await InsertRawKillmailAsync(message.Id, message.Content);
+                await ProcessMessage(message);
             }
         }
  
@@ -84,37 +84,43 @@ namespace eqkillboard_discord_parser
 
             if (killmailChannel != null)
                 {
-                    KillMailParser killmailParser = new KillMailParser();
                     var messageLimit = 5;
-                    var rawKillMailId = 0;
 
                     killmailChannel.GetMessagesAsync(messageLimit)
                     .ForEach(async m => {
                         foreach(var message in m) {
-                            try {
-                                rawKillMailId = await InsertRawKillmailAsync(message.Id, message.Content);
-                            }
-                            catch (Exception ex) {
-                                Console.WriteLine(ex);
-                            }
-                            var extractedKillmail = killmailParser.ExtractKillmail(message.Content);
-                            extractedKillmail.killmail_raw_id = rawKillMailId;
-
-                            var killmailToInsert = await InsertParsedKillmailAsync(extractedKillmail);
-
-                            // Get level and class for each char
-                            var scraper = new Scraper();
-                            var victimClassLevel = await scraper.ScrapeCharInfo(extractedKillmail.victimName);
-                            var attackerClassLevel = await scraper.ScrapeCharInfo(extractedKillmail.attackerName); 
-
-                            // MAKE CHECK FOR ATTACKER OR VICTIM LEVEL
-                            // await InsertClassLevel(extractedKillmail, victimClassLevel);
-                            // await InsertClassLevel(extractedKillmail, victimClassLevel);
+                            await ProcessMessage(message);
                         }
-                        });
+                    });
 
                 }
 			return Task.CompletedTask;
+        }
+
+        private async Task ProcessMessage(IMessage message)
+        {
+            KillMailParser killmailParser = new KillMailParser();
+            var rawKillMailId = 0;
+            
+            try {
+                rawKillMailId = await InsertRawKillmailAsync(message.Id, message.Content);
+            }
+            catch (Exception ex) {
+                Console.WriteLine(ex);
+            }
+            var extractedKillmail = killmailParser.ExtractKillmail(message.Content);
+            extractedKillmail.killmail_raw_id = rawKillMailId;
+
+            var killmailToInsert = await InsertParsedKillmailAsync(extractedKillmail);
+
+            // Get level and class for each char
+            var scraper = new Scraper();
+            var victimClassLevel = await scraper.ScrapeCharInfo(extractedKillmail.victimName);
+            var attackerClassLevel = await scraper.ScrapeCharInfo(extractedKillmail.attackerName); 
+
+            // MAKE CHECK FOR ATTACKER OR VICTIM LEVEL
+            // await InsertClassLevel(extractedKillmail, victimClassLevel);
+            // await InsertClassLevel(extractedKillmail, victimClassLevel);          
         }
  
         private async Task<int> InsertRawKillmailAsync(UInt64 messageId, string message)
