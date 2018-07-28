@@ -22,6 +22,7 @@ sqitch deploy db:pg:database_name
 ## PostGraphile
 
 ```
+sudo apt-get install nodejs
 sudo npm install postgraphile -g
 
 postgraphile -c postgres://user:password@localhost/database_name \
