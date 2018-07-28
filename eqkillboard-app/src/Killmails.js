@@ -55,7 +55,7 @@ class Killmails extends Component {
 
                   characterElement = (
                     <Link to={`/character/${record.characterByVictimId.id}`}>
-                      {record.characterByVictimId.name} ({record.victimLevel ? record.victimLevel : 'Unknown level'})
+                      {record.characterByVictimId.name} ({record.victimLevel ? record.victimLevel : '?'})
                     </Link>                    
                   )
                   if (record.guildByVictimGuildId) {
@@ -84,7 +84,7 @@ class Killmails extends Component {
 
                   characterElement = (
                     <Link to={`/character/${record.characterByAttackerId.id}`}>
-                      {record.characterByAttackerId.name} ({record.attackerLevel ? record.attackerLevel : 'Unknown level'})
+                      {record.characterByAttackerId.name} ({record.attackerLevel ? record.attackerLevel : '?'})
                     </Link>                    
                   )
                   if (record.guildByAttackerGuildId) {

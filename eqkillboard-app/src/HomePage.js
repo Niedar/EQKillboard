@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom'
 import KillmailsQuery from './KillmailsQuery';
+import TopStatsQuery from './TopStatsQuery';
 import Killmails from './Killmails';
 import { Button, Icon } from 'antd';
 import { Spin, Row, Col } from 'antd';
@@ -45,24 +46,37 @@ const getPaginationButtons = pageInfo => {
 class HomePage extends Component {
   render() {
     return (
-      <KillmailsQuery
-        before={this.props.match.params.cursorDirection === "before" ? this.props.match.params.cursor : null}
-        after={this.props.match.params.cursorDirection === "after" ? this.props.match.params.cursor : null}
-      >
-      {({ loading, error, data}) => {
-          if (loading) return <Spin size="large" />;
-          if (error) return `Error! ${error.message}`;
-          
-          return (
-            <div>
-              <h1>Latest Killmails</h1>
-              { getPaginationButtons(data.allKillmails.pageInfo) }
-              <Killmails killmails={data.allKillmails.nodes} />
-              { getPaginationButtons(data.allKillmails.pageInfo) }
-            </div>
-          );
-      }}
-      </KillmailsQuery>
+      <React.Fragment>
+        <TopStatsQuery>
+        {({ loading, error, data}) => {
+            if (loading) return null;
+            if (error) return `Error! ${error.message}`;
+            
+            return (
+              <div>
+                <h1>Latest Killmails</h1>
+              </div>
+            );
+        }}
+        </TopStatsQuery>
+        <KillmailsQuery
+          before={this.props.match.params.cursorDirection === "before" ? this.props.match.params.cursor : null}
+          after={this.props.match.params.cursorDirection === "after" ? this.props.match.params.cursor : null}
+        >
+        {({ loading, error, data}) => {
+            if (loading) return <Spin size="large" />;
+            if (error) return `Error! ${error.message}`;
+            
+            return (
+              <div>
+                { getPaginationButtons(data.allKillmails.pageInfo) }
+                <Killmails killmails={data.allKillmails.nodes} />
+                { getPaginationButtons(data.allKillmails.pageInfo) }
+              </div>
+            );
+        }}
+        </KillmailsQuery>
+      </React.Fragment>
     );
   }
 }
