@@ -13,6 +13,8 @@ using System.Data;
 using System.Collections.Generic;
 using eqkillboard_discord_parser.Models;
 using System.Globalization;
+using Npgsql;
+using System.Transactions;
 
 namespace eqkillboard_discord_parser
 {
@@ -84,7 +86,7 @@ namespace eqkillboard_discord_parser
 
             if (killmailChannel != null)
                 {
-                    var messageLimit = 5;
+                    var messageLimit = 3;
 
                     killmailChannel.GetMessagesAsync(messageLimit)
                     .ForEach(async m => {
@@ -101,37 +103,63 @@ namespace eqkillboard_discord_parser
         {
             KillMailParser killmailParser = new KillMailParser();
             var rawKillMailId = 0;
-            
-            try {
-                rawKillMailId = await InsertRawKillmailAsync(message.Id, message.Content);
-            }
-            catch (Exception ex) {
-                Console.WriteLine(ex);
-            }
-            var extractedKillmail = killmailParser.ExtractKillmail(message.Content);
-            extractedKillmail.killmail_raw_id = rawKillMailId;
 
-            var killmailToInsert = await InsertParsedKillmailAsync(extractedKillmail);
+            // Check if killmail exists
+            using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
+                var selectRawKillmailSql = @"SELECT *
+                                            FROM killmail_raw 
+                                            WHERE discord_message_id = @messageId";
+
+                try {
+                    var messageIdSigned = Convert.ToInt64(message.Id);
+                    var affectedRows = await connection.QueryAsync(selectRawKillmailSql, new { messageId = messageIdSigned });
+                    
+                    if (affectedRows.Count() > 0) {
+                        return;
+                    }
+                }
+
+                catch (Exception ex) {
+                    Console.WriteLine(ex);
+                }
+            }
+
+            // Process message if nothing found
+            using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
+
+                connection.Open();
+
+                using (var killmailTransaction = connection.BeginTransaction()) {
+
+                    rawKillMailId = await InsertRawKillmailAsync(connection, message);
+
+                    // Parse raw killmail
+                    var parsedKillmail = killmailParser.ExtractKillmail(message.Content);
+                    parsedKillmail.killmail_raw_id = rawKillMailId;
+
+                    var killmailToInsert = await InsertParsedKillmailAsync(connection, parsedKillmail);
+
+                    killmailTransaction.Commit();
+                }
+            }
 
             // Get level and class for each char
             var scraper = new Scraper();
-            var victimClassLevel = await scraper.ScrapeCharInfo(extractedKillmail.victimName);
-            var attackerClassLevel = await scraper.ScrapeCharInfo(extractedKillmail.attackerName); 
+            // var victimClassLevel = await scraper.ScrapeCharInfo(extractedKillmail.victimName);
+            // var attackerClassLevel = await scraper.ScrapeCharInfo(extractedKillmail.attackerName); 
 
             // MAKE CHECK FOR ATTACKER OR VICTIM LEVEL
             // await InsertClassLevel(extractedKillmail, victimClassLevel);
             // await InsertClassLevel(extractedKillmail, victimClassLevel);          
         }
  
-        private async Task<int> InsertRawKillmailAsync(UInt64 messageId, string message)
+        private async Task<int> InsertRawKillmailAsync(IDbConnection connection, IMessage message)
         {
-            var messageIdSigned = Convert.ToInt64(messageId);
-            Console.WriteLine(message.ToString());
-
-            var connection = DatabaseConnection.CreateConnection(DbConnectionString);
+            var messageIdSigned = Convert.ToInt64(message.Id);
+            Console.WriteLine(message.Content.ToString());
 
             DynamicParameters parameters = new DynamicParameters();
-
+            
             var sql = @"INSERT INTO killmail_raw (discord_message_id, message) Values (@MessageId, @Message)
            ON CONFLICT (discord_message_id) DO UPDATE
            SET message = EXCLUDED.message
@@ -139,7 +167,7 @@ namespace eqkillboard_discord_parser
            "; // insert raw killmail
 
             parameters.Add("@MessageId", messageIdSigned);
-            parameters.Add("@Message", message);
+            parameters.Add("@Message", message.Content);
 
             parameters.Add("@KillmailRawId", direction: ParameterDirection.Output);
 
@@ -158,12 +186,10 @@ namespace eqkillboard_discord_parser
             return killmailRawId;
         }
 
-        private async Task<Killmail> InsertParsedKillmailAsync(KillmailModel parsedKillmailModel) {
-            var connection = DatabaseConnection.CreateConnection(DbConnectionString);
+        private async Task<Killmail> InsertParsedKillmailAsync(IDbConnection connection, KillmailModel parsedKillmailModel) {
 
             var killmailToInsert = new Killmail();
 
-            // TODO: convert killedAt property to DateTime
             CultureInfo USCultureInfo = new CultureInfo("en-US");
             killmailToInsert.killed_at = DateTime.Parse(parsedKillmailModel.killedAt, USCultureInfo);
             killmailToInsert.killmail_raw_id = parsedKillmailModel.killmail_raw_id;
@@ -269,8 +295,6 @@ namespace eqkillboard_discord_parser
             // Reset params, next: Attacker name
             parameters = new DynamicParameters();
 
-            // Set mock value for level for testing and preparation purposes - attacker level
-
             var attackCharInsertSql = @"INSERT INTO character (name, guild_id) 
                         VALUES (@AttackerName, @GuildId)
                         ON CONFLICT(name) DO UPDATE 
@@ -306,8 +330,6 @@ namespace eqkillboard_discord_parser
             catch (Exception ex) {
                 Console.WriteLine(ex);
             }
-
-            connection.Close();
 
             return killmailToInsert;
         }
