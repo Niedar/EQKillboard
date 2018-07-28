@@ -23,7 +23,7 @@ namespace eqkillboard_discord_parser
         private DiscordSocketClient client;
         private DiscordSocketConfig config;
         private string DbConnectionString;
-        //public string DbConnectionString { get; set; }
+        private ulong lastRetrievedDiscordMsgId;
         public static void Main(string[] args) {
             new Program().MainAsync().GetAwaiter().GetResult();
         }
@@ -76,27 +76,53 @@ namespace eqkillboard_discord_parser
             return Task.CompletedTask;
         }
 
-        private Task GetHistory()
+        private async Task GetHistory()
         {
-            Console.WriteLine(config.MessageCacheSize);
+            var serverTime = new DateTimeOffset(DateTime.Now);
 
             var killmailGuild = client.Guilds.FirstOrDefault(x => x.Name == "Rise of Zek");
-            
             var killmailChannel = killmailGuild.TextChannels.FirstOrDefault(x => x.Name == "yellowtext");
 
-            if (killmailChannel != null)
-                {
-                    var messageLimit = 3;
+            // Retrieve first message
+            if(lastRetrievedDiscordMsgId == 0) {
+                var limit = 1;
+                // Really confusing to call 2 'for eaches' on retrieving a isngle message, should refactor somehow
+                var messageToReceive = await killmailChannel.GetMessagesAsync(limit).Flatten();
+                
+                lastRetrievedDiscordMsgId = messageToReceive.ElementAt(0).Id;
+            }
 
-                    killmailChannel.GetMessagesAsync(messageLimit)
-                    .ForEach(async m => {
-                        foreach(var message in m) {
+            if (killmailChannel != null && lastRetrievedDiscordMsgId != 0)
+                {
+                    var messageLimit = 1;
+
+                    var historyLengthSetting = new TimeSpan(0, 1, 0, 0); // constructor with parameters: days, hours, minutes, seconds
+
+                    //var 
+
+                    var messages = await killmailChannel.GetMessagesAsync(lastRetrievedDiscordMsgId, Direction.Before, messageLimit).Flatten();
+                    
+                    int i = messages.Count()-1;
+
+                    while(i >= 0) {
+                        var message = messages.ElementAt(i);
+                        var difference = serverTime - message.CreatedAt;
+                        if(serverTime - message.CreatedAt < historyLengthSetting) {
                             await ProcessMessage(message);
                         }
-                    });
+                        else {
+                            return;
+                        }
 
+                        lastRetrievedDiscordMsgId = message.Id;
+
+                        i--;
+                    }
+
+                    GetHistory();
                 }
-			return Task.CompletedTask;
+
+            //return Task.CompletedTask;
         }
 
         private async Task ProcessMessage(IMessage message)
