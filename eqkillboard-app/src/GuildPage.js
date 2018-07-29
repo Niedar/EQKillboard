@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import KillmailsQuery from './KillmailsQuery';
 import GuildInfoQuery from './GuildInfoQuery';
 import Killmails from './Killmails';
-import { Button, Radio, Icon } from 'antd';
+import { Button, Icon } from 'antd';
 import { Spin, Row, Col } from 'antd';
 
 

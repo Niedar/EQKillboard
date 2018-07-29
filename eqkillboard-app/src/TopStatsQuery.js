@@ -4,7 +4,7 @@ import gql from "graphql-tag"
 
 export default class TopStatsQuery extends Component {
   render() {
-    const { characterId, children } = this.props
+    const { children } = this.props
 
     return (
       <Query query={GET_TOPSTATS}>

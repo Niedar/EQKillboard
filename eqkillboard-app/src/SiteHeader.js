@@ -3,7 +3,7 @@ import { Layout, Row, Col } from 'antd';
 import Search from './Search';
 import { Link } from 'react-router-dom'
 
-const { Header, Footer, Sider, Content } = Layout;
+const { Header } = Layout;
 class SiteHeader extends Component {
   render() {
     return (

@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React from 'react';
 import { Icon, Input, AutoComplete } from 'antd';
 import { withApollo } from 'react-apollo';
 import { withRouter } from 'react-router-dom'

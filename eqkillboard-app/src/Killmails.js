@@ -20,16 +20,16 @@ class Killmails extends Component {
   render() {
     var killmailsGroupedByKilledAt = this.groupKillmailsByKilledAt(this.props.killmails);
     return (
-      Object.keys(killmailsGroupedByKilledAt).map(dateKey => {
+      Object.keys(killmailsGroupedByKilledAt).map((dateKey, index) => {
         let killmails = killmailsGroupedByKilledAt[dateKey];
         return (
-          <div>
+          <div key={`killmailTableGroup-${index}`}>
             <h2 style={{marginLeft: "10px"}}>{dateKey}</h2>
             <Table dataSource={killmails} rowKey="nodeId" pagination={false}>
               <Column 
                 title="Time"
                 dataIndex="killedAt"
-                key="killedAt"
+                key={`killedAt-${index}`}
                 render={(text, record) => (
                   // TODO: This needs to be displayed in local time
                   this.getLocalTime(record.killedAt)
@@ -39,7 +39,7 @@ class Killmails extends Component {
               <Column
                 title="Zone"
                 dataIndex="zoneByZoneId"
-                key="zoneByZoneId"
+                key={`zoneByZoneId-${index}`}
                 render={(text, record) => (
                   <a href="javascript:;">{record.zoneByZoneId.name}</a>
                 )}
@@ -48,7 +48,7 @@ class Killmails extends Component {
               <Column
                 title="Victim"
                 dataIndex="characterByVictimId"
-                key="characterByVictimId"
+                key={`characterByVictimId-${index}`}
                 render={(text, record) => {
                   var characterElement;
                   var guildElement;
@@ -77,7 +77,7 @@ class Killmails extends Component {
               <Column
                 title="Attacker"
                 dataIndex="characterByAttackerId"
-                key="characterByAttackerId"
+                key={`characterByAttackerId-${index}`}
                 render={(text, record) => {
                   var characterElement;
                   var guildElement;

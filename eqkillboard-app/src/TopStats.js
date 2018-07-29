@@ -1,7 +1,5 @@
 import React, { Component } from 'react';
 import { Table, Row, Col } from 'antd';
-import moment from 'moment';
-import groupBy from 'lodash/groupBy';
 import {Link} from 'react-router-dom';
 import orderBy from 'lodash/orderBy';
 import take from 'lodash/take';
@@ -23,8 +21,7 @@ class TopStats extends Component {
           <Table dataSource={topCharacters} rowKey="nodeId" pagination={false} size="small">
             <Column 
               title="Kills"
-              dataIndex="killedAt"
-              key="killedAt"
+              key="characterKilCount"
               render={(text, record) => (
                 // TODO: This needs to be displayed in local time
                 record.killmailsByAttackerId.totalCount
@@ -33,10 +30,11 @@ class TopStats extends Component {
             />
             <Column
               title="Character"
-              dataIndex="id"
-              key="id"
+              key="characterId"
               render={(text, record) => (
-                <a href="javascript:;">{record.name}</a>
+                <Link to={`/character/${record.id}`}>
+                  {record.name}
+                </Link> 
               )}
               width={150}
             /> 
@@ -46,8 +44,7 @@ class TopStats extends Component {
           <Table dataSource={topGuilds} rowKey="nodeId" pagination={false} size="small">
             <Column 
               title="Kills"
-              dataIndex="killedAt"
-              key="killedAt"
+              key="guildKilledCount"
               render={(text, record) => (
                 // TODO: This needs to be displayed in local time
                 record.killmailsByAttackerGuildId.totalCount
@@ -56,10 +53,11 @@ class TopStats extends Component {
             />
             <Column
               title="Guild"
-              dataIndex="id"
-              key="id"
+              key="guildId"
               render={(text, record) => (
-                <a href="javascript:;">{record.name}</a>
+                <Link to={`/guild/${record.id}`}>
+                  {record.name}
+                </Link> 
               )}
               width={150}
             /> 

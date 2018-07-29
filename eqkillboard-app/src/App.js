@@ -7,7 +7,7 @@ import GuildPage from './GuildPage';
 import './App.css';
 import SiteHeader from './SiteHeader';
 
-const { Header, Footer, Sider, Content } = Layout;
+const { Footer, Content } = Layout;
 class App extends Component {
   render() {
     return (
