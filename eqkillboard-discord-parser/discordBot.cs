@@ -81,6 +81,7 @@ namespace eqkillboard_discord_parser
             Task.Run(() => GetHistory());
             return Task.CompletedTask;
         }
+
         private async Task GetHistory()
         {
             var serverTime = new DateTimeOffset(DateTime.Now);
@@ -211,49 +212,60 @@ namespace eqkillboard_discord_parser
 
             // maybe refactor all these queries at some point!
 
-            // First, insert query for victim guild
-            var victimGuildInsertSql = @"INSERT INTO guild (name) 
-                                    VALUES (@VictimGuild)
-                                    ON CONFLICT(name) DO UPDATE 
-                                    SET name = EXCLUDED.name 
-                                    RETURNING id;
-                                    ";
-
-            parameters.Add("@VictimGuild", parsedKillmailModel.victimGuild);
-            parameters.Add("@VictimGuildId", direction: ParameterDirection.Output);
-
-            try {
-                await connection.ExecuteAsync(victimGuildInsertSql, parameters);
+            // First, check if victim guild name is empty and then insert query for victim guild
+            if (String.IsNullOrEmpty(parsedKillmailModel.victimGuild)) {
+                killmailToInsert.victim_guild_id = null;
             }
+            else {
+                var victimGuildInsertSql = @"INSERT INTO guild (name) 
+                                        VALUES (@VictimGuild)
+                                        ON CONFLICT(name) DO UPDATE 
+                                        SET name = EXCLUDED.name 
+                                        RETURNING id;
+                                        ";
 
-            catch (Exception ex) {
-                Console.WriteLine(ex);
+                parameters.Add("@VictimGuild", parsedKillmailModel.victimGuild);
+                parameters.Add("@VictimGuildId", direction: ParameterDirection.Output);
+
+                try {
+                    await connection.ExecuteAsync(victimGuildInsertSql, parameters);
+                }
+
+                catch (Exception ex) {
+                    Console.WriteLine(ex);
+                }
+
+                killmailToInsert.victim_guild_id = parameters.Get<int>("VictimGuildId");
             }
-
-            killmailToInsert.victim_guild_id =  parameters.Get<int>("VictimGuildId");
 
             // Reset params, next: Attacker guild
             parameters = new DynamicParameters();
 
-            var attackerGuildInsertSql = @"INSERT INTO guild (name) 
-                                    VALUES (@AttackerGuild)
-                                    ON CONFLICT(name) DO UPDATE 
-                                    SET name = EXCLUDED.name 
-                                    RETURNING id;
-                                    ";                                    
+            if (String.IsNullOrEmpty(parsedKillmailModel.attackerGuild)) {
+                killmailToInsert.attacker_guild_id = null;
+            }
+            else {
+                var attackerGuildInsertSql = @"INSERT INTO guild (name) 
+                                        VALUES (@AttackerGuild)
+                                        ON CONFLICT(name) DO UPDATE 
+                                        SET name = EXCLUDED.name 
+                                        RETURNING id;
+                                        ";                                    
 
-            parameters.Add("@AttackerGuild", parsedKillmailModel.attackerGuild);
-            parameters.Add("@AttackerGuildId", direction: ParameterDirection.Output);
+                parameters.Add("@AttackerGuild", parsedKillmailModel.attackerGuild);
+                parameters.Add("@AttackerGuildId", direction: ParameterDirection.Output);
 
-            try {
-                await connection.ExecuteAsync(attackerGuildInsertSql, parameters);
+                try {
+                    await connection.ExecuteAsync(attackerGuildInsertSql, parameters);
+                }
+
+                catch (Exception ex) {
+                    Console.WriteLine(ex);
+                }
+
+                killmailToInsert.attacker_guild_id =  parameters.Get<int>("AttackerGuildId");
             }
 
-            catch (Exception ex) {
-                Console.WriteLine(ex);
-            }
-
-            killmailToInsert.attacker_guild_id =  parameters.Get<int>("AttackerGuildId");
 
             // Reset params, next: Zone
             parameters = new DynamicParameters();
