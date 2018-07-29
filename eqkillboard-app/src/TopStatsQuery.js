@@ -18,6 +18,7 @@ const GET_TOPSTATS = gql`
 query allStats {
   allCharacters {
     nodes {
+      nodeId,
       id,
       name,
       killmailsByAttackerId {
@@ -27,6 +28,9 @@ query allStats {
   }
   allGuilds {
     nodes {
+      nodeId,
+      id,
+      name,
       killmailsByAttackerGuildId {
         totalCount
       }

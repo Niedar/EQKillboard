@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import KillmailsQuery from './KillmailsQuery';
 import TopStatsQuery from './TopStatsQuery';
 import Killmails from './Killmails';
+import TopStats from './TopStats';
 import { Button, Icon } from 'antd';
 import { Spin, Row, Col } from 'antd';
 
@@ -54,7 +55,8 @@ class HomePage extends Component {
             
             return (
               <div>
-                <h1>Latest Killmails</h1>
+                <h1 style={{marginLeft: "10px"}}>Leaderboard</h1>
+                <TopStats allCharacters={data.allCharacters} allGuilds={data.allGuilds} />
               </div>
             );
         }}
@@ -69,6 +71,8 @@ class HomePage extends Component {
             
             return (
               <div>
+                <br />
+                <h1 style={{marginLeft: "10px"}}>Latest Kills</h1>
                 { getPaginationButtons(data.allKillmails.pageInfo) }
                 <Killmails killmails={data.allKillmails.nodes} />
                 { getPaginationButtons(data.allKillmails.pageInfo) }
