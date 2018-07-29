@@ -20,8 +20,9 @@ namespace eqkillboard_discord_parser
 {
     public class Program
     {
+        private IConfiguration configuration;
         private DiscordSocketClient client;
-        private DiscordSocketConfig config;
+        private DiscordSocketConfig discordConfig;
         private string DbConnectionString;
         private IMessage lastRetrievedDiscordMsg;
         public static void Main(string[] args) {
@@ -36,19 +37,20 @@ namespace eqkillboard_discord_parser
                             .SetBasePath(Directory.GetCurrentDirectory())
                             .AddJsonFile("appsettings.json"); 
 
-            var configuration = builder.Build(); 
+            configuration = builder.Build(); 
 
             // call connection string from config
             DbConnectionString = configuration["ConnectionStrings:DefaultConnection"];
 
             // create Config for Discord
-            config = new DiscordSocketConfig {
+            discordConfig = new DiscordSocketConfig {
                 MessageCacheSize = 100
             };
 
-            config.WebSocketProvider = WS4NetProvider.Instance; // Only needed for Win 7, remove otherwise
+            // Only needed for Win 7, remove otherwise
+            discordConfig.WebSocketProvider = WS4NetProvider.Instance; 
 
-            client = new DiscordSocketClient(config);
+            client = new DiscordSocketClient(discordConfig);
             client.Log += Log;
  
             string token = configuration["Tokens:userToken"];
@@ -99,8 +101,9 @@ namespace eqkillboard_discord_parser
                 await ProcessMessage(messageToReceive); // GetMessagesAsync ignores the message in the FROM parameter, so process this message now
             }
 
-            var historyLengthSetting = new TimeSpan(0, 1, 0, 0); // constructor with parameters: days, hours, minutes, seconds
-            var messageLimit = 10;
+            var historyNumberOfDays = Convert.ToInt32(configuration["Settings:HistoryLengthInDays"]);
+            var historyLengthSetting = new TimeSpan(historyNumberOfDays, 0, 0, 0); // constructor with parameters: days, hours, minutes, seconds
+            var messageLimit = 3;
 
             while(serverTime - lastRetrievedDiscordMsg.CreatedAt < historyLengthSetting)
             {
@@ -194,8 +197,6 @@ namespace eqkillboard_discord_parser
             }
             
             var killmailRawId =  parameters.Get<int>("KillmailRawId");
-
-            //connection.Close();
 
             return killmailRawId;
         }
