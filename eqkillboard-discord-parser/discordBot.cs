@@ -103,7 +103,7 @@ namespace eqkillboard_discord_parser
 
             var historyNumberOfDays = Convert.ToInt32(configuration["Settings:HistoryLengthInDays"]);
             var historyLengthSetting = new TimeSpan(historyNumberOfDays, 0, 0, 0); // constructor with parameters: days, hours, minutes, seconds
-            var messageLimit = 3;
+            var messageLimit = 100;
 
             while(serverTime - lastRetrievedDiscordMsg.CreatedAt < historyLengthSetting)
             {
@@ -111,6 +111,7 @@ namespace eqkillboard_discord_parser
                     
                     foreach (var message in messages) {
                         await ProcessMessage(message);
+                        await Task.Delay(500);
                         lastRetrievedDiscordMsg = message;
                     }
             }
