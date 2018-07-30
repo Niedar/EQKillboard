@@ -20,7 +20,12 @@ namespace eqkillboard_discord_parser {
         var cellSelector = "div.InventoryStats table tbody tr:nth-child(5)";
         var cells = document.QuerySelector(cellSelector);
         
-        var classLevel = cells.TextContent;//Select(m => m.TextContent).FirstOrDefault();
+        string classLevel = string.Empty;
+        if (cells != null)
+        {
+            classLevel = cells.TextContent;
+        }
+         //Select(m => m.TextContent).FirstOrDefault();
 
         //var classLevel = 
         // Remove deity from retrieved string!!

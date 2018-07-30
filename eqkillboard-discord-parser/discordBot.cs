@@ -189,8 +189,14 @@ namespace eqkillboard_discord_parser
             attacker.classLevel = await scraper.ScrapeCharInfo(attacker.name); 
 
             using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
-                await InsertClassLevel(connection, victim, insertedKillmail, message);
-                await InsertClassLevel(connection, attacker, insertedKillmail, message);          
+                if (!string.IsNullOrEmpty(victim.classLevel))
+                {
+                    await InsertClassLevel(connection, victim, insertedKillmail, message);
+                }
+                if (!string.IsNullOrEmpty(attacker.classLevel))
+                {
+                    await InsertClassLevel(connection, attacker, insertedKillmail, message);  
+                } 
             }
         
         }
@@ -252,7 +258,15 @@ namespace eqkillboard_discord_parser
             if (String.IsNullOrEmpty(name)) {
                 return null;
             }
-            else {
+            else 
+            {
+                var guildSelectQuery = @"SELECT id FROM guild WHERE name = @Name;";
+                var guild_id = await connection.ExecuteScalarAsync<int?>(guildSelectQuery, new { Name = name});
+                if (guild_id != null)
+                {
+                    return guild_id.Value;
+                }
+                
                 var victimGuildInsertSql = @"INSERT INTO guild (name) 
                                         VALUES (@VictimGuild)
                                         ON CONFLICT(name) DO UPDATE 
@@ -270,6 +284,13 @@ namespace eqkillboard_discord_parser
 
         private async Task<int> GetOrInsertZone(IDbConnection connection, string name)
         {
+            var zoneSelectQuery = @"SELECT id FROM zone WHERE name = @Name;";
+            var zoneId = await connection.ExecuteScalarAsync<int?>(zoneSelectQuery, new { Name = name});
+            if (zoneId != null)
+            {
+                return zoneId.Value;
+            }
+
             var parameters = new DynamicParameters();
             var zoneInsertSql = @"INSERT INTO zone (name) 
                         VALUES (@ZoneName)
@@ -287,6 +308,13 @@ namespace eqkillboard_discord_parser
 
         private async Task<int> GetOrInsertCharacter(IDbConnection connection, string name, int? guildId)
         {
+            var charSelectQuery = @"SELECT id FROM character WHERE name = @Name;";
+            var characterId = await connection.ExecuteScalarAsync<int?>(charSelectQuery, new { Name = name});
+            if (characterId != null)
+            {
+                return characterId.Value;
+            }
+
             var parameters = new DynamicParameters();
             var victimCharInsertSql = @"INSERT INTO character (name, guild_id) 
                         VALUES (@VictimName, @GuildId)
@@ -312,7 +340,11 @@ namespace eqkillboard_discord_parser
             
             var classLevelParser = new KillMailParser();
             
-            character.level = Convert.ToInt32(classLevelParser.ExtractLevel(character.classLevel));
+            var levelString = classLevelParser.ExtractLevel(character.classLevel);
+            if (!string.IsNullOrEmpty(levelString))
+            {
+                character.level = Convert.ToInt32(levelString);
+            }
             character.className = classLevelParser.ExtractChar(character.classLevel);
 
             // Update character level and killmail character level if not older than historyLengthUpdateSetting
@@ -352,26 +384,38 @@ namespace eqkillboard_discord_parser
                 }
             }
 
-            // Update class table with class_id
-            var insertClassSql = @"INSERT INTO class (name) 
-                                VALUES (@ClassName)
-                                ON CONFLICT(name) DO UPDATE
-                                SET name = EXCLUDED.name
-                                RETURNING id
-                                ";
+            if (!string.IsNullOrEmpty(character.className))
+            {
+                var classSelectQuery = @"SELECT id FROM class WHERE name = @Name;";
+                var classId = await connection.ExecuteScalarAsync<int?>(classSelectQuery, new { Name = character.className});
+                if (classId != null)
+                {
+                    character.classId = classId.Value;
+                }
+                else
+                {
+                    // Update class table with class_id
+                    var insertClassSql = @"INSERT INTO class (name) 
+                                        VALUES (@ClassName)
+                                        ON CONFLICT(name) DO UPDATE
+                                        SET name = EXCLUDED.name
+                                        RETURNING id
+                                        ";
 
-            var parameters = new DynamicParameters();
-            parameters.Add("@ClassName", character.className);
-            parameters.Add("@ClassId", direction: ParameterDirection.Output);
+                    var parameters = new DynamicParameters();
+                    parameters.Add("@ClassName", character.className);
+                    parameters.Add("@ClassId", direction: ParameterDirection.Output);
 
-            try {
-                character.classId = await connection.ExecuteAsync(insertClassSql, parameters);
+                    try {
+                        await connection.ExecuteAsync(insertClassSql, parameters);
+                    }
+                    catch (Exception ex) {
+                        Console.WriteLine(ex);
+                    }
+
+                    character.classId = parameters.Get<int>("ClassId");
+                }
             }
-            catch (Exception ex) {
-                Console.WriteLine(ex);
-            }
-
-            character.classId = parameters.Get<int>("ClassId");
 
             // Update character table with class_id
             var insertClassIntoCharSql = @"UPDATE character 
