@@ -54,7 +54,7 @@ CREATE FUNCTION search_classes(search TEXT) RETURNS SETOF class AS $$
     FROM class
     WHERE class.name % search
     ORDER BY similarity(class.name, search) DESC
-    LIMIT 10;
+    LIMIT 5;
 $$ LANGUAGE SQL STABLE;
 
 
@@ -82,7 +82,7 @@ CREATE FUNCTION search_characters(search TEXT) RETURNS SETOF public.character AS
     FROM character
     WHERE character.name % search
     ORDER BY similarity(character.name, search) DESC
-    LIMIT 10;
+    LIMIT 5;
 $$ LANGUAGE SQL STABLE;
 
 
