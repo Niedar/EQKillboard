@@ -16,7 +16,8 @@ namespace eqkillboard_discord_parser {
         
         public string classLevelPattern { get; set; } = @"(?<level>\d*)"
                                                         + @"\s"
-                                                        + @"(?<charName>\w*)";
+                                                        + @"(?<charName>\w*)"
+                                                        + @"[A-Z]";
                                                         
         public KillmailModel ExtractKillmail(string input) {
             var extractedKillmail = new KillmailModel();
@@ -50,7 +51,7 @@ namespace eqkillboard_discord_parser {
             return extractedKillmail;
 
         }
-
+        
         public string ExtractLevel(string classLevel) {
             string level = "";
             Match classLevelMatch = Regex.Match(classLevel, classLevelPattern);

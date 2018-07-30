@@ -22,6 +22,7 @@ namespace eqkillboard_discord_parser {
         
         var classLevel = cells.TextContent;//Select(m => m.TextContent).FirstOrDefault();
 
+        //var classLevel = 
         // Remove deity from retrieved string!!
 
         return classLevel;

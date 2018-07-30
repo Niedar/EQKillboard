@@ -94,14 +94,14 @@ namespace eqkillboard_discord_parser
             // Retrieve first message
             if(killmailChannel != null) {
                 var limit = 1;
-                // Really confusing to call 2 'for eaches' on retrieving a isngle message, should refactor somehow
                 var messageCollToReceive = await killmailChannel.GetMessagesAsync(limit).Flatten();
                 var messageToReceive = messageCollToReceive.ElementAt(0);
                 lastRetrievedDiscordMsg = messageToReceive;
                 await ProcessMessage(messageToReceive); // GetMessagesAsync ignores the message in the FROM parameter, so process this message now
             }
 
-            var historyNumberOfDays = Convert.ToInt32(configuration["Settings:HistoryLengthInDays"]);
+            int historyNumberOfDays;
+            int.TryParse(configuration["Settings:HistoryLengthInDays"], out historyNumberOfDays);
             var historyLengthSetting = new TimeSpan(historyNumberOfDays, 0, 0, 0); // constructor with parameters: days, hours, minutes, seconds
             var messageLimit = 3;
 
@@ -142,6 +142,9 @@ namespace eqkillboard_discord_parser
             }
 
             // Process message if nothing found
+            KillmailModel parsedKillmail;
+            Killmail insertedKillmail;
+
             using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
 
                 connection.Open();
@@ -151,10 +154,10 @@ namespace eqkillboard_discord_parser
                     rawKillMailId = await InsertRawKillmailAsync(connection, message);
 
                     // Parse raw killmail
-                    var parsedKillmail = killmailParser.ExtractKillmail(message.Content);
+                    parsedKillmail = killmailParser.ExtractKillmail(message.Content);
                     parsedKillmail.killmail_raw_id = rawKillMailId;
 
-                    var killmailToInsert = await InsertParsedKillmailAsync(connection, parsedKillmail);
+                    insertedKillmail = await InsertParsedKillmailAsync(connection, parsedKillmail);
 
                     killmailTransaction.Commit();
                 }
@@ -162,12 +165,23 @@ namespace eqkillboard_discord_parser
 
             // Get level and class for each char
             var scraper = new Scraper();
-            // var victimClassLevel = await scraper.ScrapeCharInfo(extractedKillmail.victimName);
-            // var attackerClassLevel = await scraper.ScrapeCharInfo(extractedKillmail.attackerName); 
+            var victim = new CharacterModel{
+                name = parsedKillmail.victimName,
+                isAttacker = false
+            };
+            var attacker = new CharacterModel{
+                name = parsedKillmail.attackerName,
+                isAttacker = true
+            };
 
-            // MAKE CHECK FOR ATTACKER OR VICTIM LEVEL
-            // await InsertClassLevel(extractedKillmail, victimClassLevel);
-            // await InsertClassLevel(extractedKillmail, victimClassLevel);          
+            victim.classLevel = await scraper.ScrapeCharInfo(victim.name);
+            attacker.classLevel = await scraper.ScrapeCharInfo(attacker.name); 
+
+            using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
+                await InsertClassLevel(connection, victim, insertedKillmail, message);
+                await InsertClassLevel(connection, attacker, insertedKillmail, message);          
+            }
+        
         }
  
         private async Task<int> InsertRawKillmailAsync(IDbConnection connection, IMessage message)
@@ -294,7 +308,6 @@ namespace eqkillboard_discord_parser
             // Reset params, next: Victim name
             parameters = new DynamicParameters();
 
-            // Set mock value for level for testing and preparation purposes - victim level
             var victimCharInsertSql = @"INSERT INTO character (name, guild_id) 
                         VALUES (@VictimName, @GuildId)
                         ON CONFLICT(name) DO UPDATE 
@@ -360,61 +373,88 @@ namespace eqkillboard_discord_parser
             return killmailToInsert;
         }
 
-        private async Task<Killmail> InsertClassLevel(Killmail killmailToInsert, string classLevel) {
-            var connection = DatabaseConnection.CreateConnection(DbConnectionString);
+        private async Task InsertClassLevel(IDbConnection connection, CharacterModel character, Killmail insertedKillmail, IMessage message) {
+
+            // Initialize variables for time testing as a base for relevance of data
+            var historyLengthUpdateSetting = new TimeSpan(0, 12, 0, 0);
+            var serverTime = new DateTimeOffset(DateTime.Now);
+            
             var classLevelParser = new KillMailParser();
             
-            var level = classLevelParser.ExtractLevel(classLevel);
-            var className = classLevelParser.ExtractChar(classLevel);
+            character.level = Convert.ToInt32(classLevelParser.ExtractLevel(character.classLevel));
+            character.className = classLevelParser.ExtractChar(character.classLevel);
 
-            var insertLevelSql = @"INSERT INTO character (level) 
-                        VALUES (@Level)
-                        ON CONFLICT(level) DO UPDATE 
-                        SET level = EXCLUDED.level,
-                        RETURNING id;
-                        ";
+            // Update character level and killmail character level if not older than historyLengthUpdateSetting
+            var insertLevelSql = @"UPDATE character 
+                    SET level = @Level
+                    WHERE name = @CharName
+                    ";
 
             try {
-                await connection.ExecuteAsync(insertLevelSql, level);
+                await connection.ExecuteAsync(insertLevelSql, new { Level = character.level, CharName = character.name });
             }
-
             catch (Exception ex) {
                 Console.WriteLine(ex);
             }
 
+            if(serverTime - message.CreatedAt < historyLengthUpdateSetting) {
+                string insertLevelIntoKillmailSql;
+
+                if (character.isAttacker) {
+                    insertLevelIntoKillmailSql = @"UPDATE killmail 
+                                        SET attacker_level = @Level
+                                        WHERE killmail_raw_id = @KillmailRawId
+                                        ";
+                }
+                else {
+                    insertLevelIntoKillmailSql = @"UPDATE killmail 
+                                        SET victim_level = @Level
+                                        WHERE killmail_raw_id = @KillmailRawId
+                                        ";
+                }
+
+                try {
+                    await connection.ExecuteAsync(insertLevelIntoKillmailSql, new { Level = character.level, KillmailRawId = insertedKillmail.killmail_raw_id});
+                }
+                catch (Exception ex) {
+                    Console.WriteLine(ex);
+                }
+            }
+
+            // Update class table with class_id
             var insertClassSql = @"INSERT INTO class (name) 
-                                VALUES (@className)
-                                ON CONFLICT(name) DO UPDATE 
-                                SET name = EXCLUDED.name,
-                                RETURNING id;
+                                VALUES (@ClassName)
+                                ON CONFLICT(name) DO UPDATE
+                                SET name = EXCLUDED.name
+                                RETURNING id
                                 ";
 
-            try {
-                await connection.ExecuteAsync(insertClassSql, className);
-            }
+            var parameters = new DynamicParameters();
+            parameters.Add("@ClassName", character.className);
+            parameters.Add("@ClassId", direction: ParameterDirection.Output);
 
+            try {
+                character.classId = await connection.ExecuteAsync(insertClassSql, parameters);
+            }
             catch (Exception ex) {
                 Console.WriteLine(ex);
             }
 
-            var insertLevelIntoKillmailSql = @"INSERT INTO killmail (name) 
-                                VALUES (@className)
-                                ON CONFLICT(name) DO UPDATE 
-                                SET name = EXCLUDED.name,
-                                RETURNING id;
-                                ";
+            character.classId = parameters.Get<int>("ClassId");
+
+            // Update character table with class_id
+            var insertClassIntoCharSql = @"UPDATE character 
+                                    SET class_id = @ClassId
+                                    WHERE name = @CharName
+                                    ";
 
             try {
-                await connection.ExecuteAsync(insertLevelIntoKillmailSql, level);
+                await connection.ExecuteAsync(insertClassIntoCharSql, new { ClassId = character.classId, CharName = character.name });
             }
-
             catch (Exception ex) {
                 Console.WriteLine(ex);
             }
 
-            connection.Close();
-
-            return killmailToInsert;
         }
     }
 }
