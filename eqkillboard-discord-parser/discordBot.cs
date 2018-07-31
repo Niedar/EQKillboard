@@ -230,14 +230,27 @@ namespace eqkillboard_discord_parser
             var killmailToInsert = new Killmail();
 
             CultureInfo USCultureInfo = new CultureInfo("en-US");
-            killmailToInsert.killed_at = DateTime.Parse(parsedKillmailModel.killedAt, USCultureInfo);
+            var timezone = "America/Chicago";
+            var killedAtLocalTime = DateTime.SpecifyKind(DateTime.Parse(parsedKillmailModel.killedAt, USCultureInfo), DateTimeKind.Unspecified);
+            
+            killmailToInsert.killed_at = killedAtLocalTime.InZone(timezone);
             killmailToInsert.killmail_raw_id = parsedKillmailModel.killmail_raw_id;
-
             killmailToInsert.victim_guild_id = await GetOrInsertGuild(connection, parsedKillmailModel.victimGuild);
             killmailToInsert.attacker_guild_id = await GetOrInsertGuild(connection, parsedKillmailModel.attackerGuild);
             killmailToInsert.zone_id = await GetOrInsertZone(connection, parsedKillmailModel.zone);
             killmailToInsert.victim_id =  await GetOrInsertCharacter(connection, parsedKillmailModel.victimName, killmailToInsert.victim_guild_id);
             killmailToInsert.attacker_id = await GetOrInsertCharacter(connection, parsedKillmailModel.attackerName, killmailToInsert.attacker_guild_id);
+
+            var dynamicParams = new DynamicParameters();
+            dynamicParams.AddDynamicParams(new {
+                killed_at = killmailToInsert.killed_at,
+                killmail_raw_id = killmailToInsert.killmail_raw_id,
+                victim_guild_id = killmailToInsert.victim_guild_id,
+                attacker_guild_id = killmailToInsert.attacker_guild_id,
+                zone_id = killmailToInsert.zone_id,
+                victim_id = killmailToInsert.victim_id,
+                attacker_id = killmailToInsert.attacker_id
+            });
 
             // Finally, insert killmail 
             var killmailInsertSql = @"INSERT INTO killmail (victim_id, victim_guild_id, attacker_id, attacker_guild_id, zone_id, killed_at, killmail_raw_id)
@@ -245,7 +258,7 @@ namespace eqkillboard_discord_parser
                         RETURNING id;
                         ";
 
-            await connection.ExecuteAsync(killmailInsertSql, killmailToInsert);
+            await connection.ExecuteAsync(killmailInsertSql, dynamicParams);
             return killmailToInsert;
         }
 
