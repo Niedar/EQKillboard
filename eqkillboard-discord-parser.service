@@ -1,0 +1,13 @@
+[Unit]
+Description=The eqkillboad discord bot that parses killmails and inserts them into the database
+AFTER=postgresql.service
+
+[Service]
+WorkingDirectory=/opt/eqkillboard-discord-parser
+ExecStart=/usr/bin/dotnet /opt/eqkillboard-discord-parser/eqkillboard-discord-parser.dll
+Restart=always
+RestartSec=10
+SyslogIdentifier=eqkillboard-discord-parser
+
+[Install]
+WantedBy=multi-user.target
