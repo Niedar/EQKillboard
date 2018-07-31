@@ -116,5 +116,14 @@ CREATE INDEX killmail_attacker_id_index ON killmail(attacker_id);
 CREATE INDEX killmail_attacker_guild_id_index ON killmail(attacker_guild_id);
 CREATE INDEX killmail_zone_id_index ON killmail(zone_id);
 
+
+DO $$
+BEGIN
+   execute 'ALTER DATABASE '||current_database()||' SET timezone TO ''UTC''';
+END;
+$$;
+
+SELECT pg_reload_conf();
+
 COMMIT;
 
