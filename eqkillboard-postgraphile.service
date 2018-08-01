@@ -3,8 +3,7 @@ Description=The postgraphile service used to serve as the graphQL API for eqkill
 AFTER=postgresql.service
 
 [Service]
-WorkingDirectory=/home/root/
-ExecStart=/usr/bin/postgraphile -c postgres://username:password@localhost/test --schema public --disable-default-mutations
+ExecStart=/usr/bin/postgraphile -c postgres://username:password@localhost/eqkillboard --schema public --disable-default-mutations
 Restart=always
 RestartSec=10
 SyslogIdentifier=eqkillboard-postgraphile
