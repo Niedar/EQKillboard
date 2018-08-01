@@ -66,7 +66,7 @@ namespace eqkillboard_discord_parser
  
         private Task MessageReceived(SocketMessage message)
         {
-            if (message.Channel.Name == "yellowtext")
+            if (message.Channel.Name.IndexOf("yellowtext", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 Task.Run(() => ProcessMessage(message));
             }
@@ -89,7 +89,7 @@ namespace eqkillboard_discord_parser
             var serverTime = new DateTimeOffset(DateTime.Now);
 
             var killmailGuild = client.Guilds.FirstOrDefault(x => x.Name == "Rise of Zek");
-            var killmailChannel = killmailGuild.TextChannels.FirstOrDefault(x => x.Name == "yellowtext");
+            var killmailChannel = killmailGuild.TextChannels.FirstOrDefault(x => x.Name.IndexOf("yellowtext", StringComparison.OrdinalIgnoreCase) >= 0);
 
             // Retrieve first message
             if(killmailChannel != null) {
