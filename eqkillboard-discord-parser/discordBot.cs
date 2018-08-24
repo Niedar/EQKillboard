@@ -231,9 +231,14 @@ namespace eqkillboard_discord_parser
 
             CultureInfo USCultureInfo = new CultureInfo("en-US");
             var timezone = "America/Chicago";
-            var killedAtLocalTime = DateTime.SpecifyKind(DateTime.Parse(parsedKillmailModel.killedAt, USCultureInfo), DateTimeKind.Unspecified);
+
+            // Server changed from chicago time to UTC time instead so this is not being used for now
+            //var killedAtLocalTime = DateTime.SpecifyKind(DateTime.Parse(parsedKillmailModel.killedAt, USCultureInfo), DateTimeKind.Unspecified);
+            //killedAtLocalTime.InZone(timezone);
+
+            var killedAtLocalTime = DateTime.SpecifyKind(DateTime.Parse(parsedKillmailModel.killedAt, USCultureInfo), DateTimeKind.Utc);
             
-            killmailToInsert.killed_at = killedAtLocalTime.InZone(timezone);
+            killmailToInsert.killed_at = killedAtLocalTime;
             killmailToInsert.killmail_raw_id = parsedKillmailModel.killmail_raw_id;
             killmailToInsert.victim_guild_id = await GetOrInsertGuild(connection, parsedKillmailModel.victimGuild);
             killmailToInsert.attacker_guild_id = await GetOrInsertGuild(connection, parsedKillmailModel.attackerGuild);
