@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Glicko2;
 
 namespace eqkillboard_rating_calculator
@@ -8,7 +10,6 @@ namespace eqkillboard_rating_calculator
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
-
 
             // Instantiate a RatingCalculator object.
             // At instantiation, you can set the default rating for a player's volatility and
@@ -51,5 +52,60 @@ namespace eqkillboard_rating_calculator
                     player.GetRatingDeviation() + ", " + player.GetVolatility());
             }
         }
+
+        public static void CalculateRatingFromStart()
+        {
+            var query = @"
+            WITH hours AS (
+                SELECT generate_series(
+                    date_trunc('hour', (SELECT killed_at FROM killmail ORDER BY killed_at LIMIT 1)),
+                    date_trunc('hour', (SELECT killed_at FROM killmail ORDER BY killed_at DESC LIMIT 1)),
+                    '1 hour'::interval
+                ) AS hour
+            )
+
+            SELECT
+				hours.hour,
+				killmail.victim_id,
+				killmail.attacker_id
+            FROM hours
+            LEFT JOIN killmail ON date_trunc('hour', killmail.killed_at) = hours.hour;       
+            ";
+
+            var allCharacterIds = new HashSet<int>();
+            var allKillmails = new List<KillmailModel>();
+            var killmailsGroupedByTimeslice = allKillmails.ToLookup(x => x.Timeslice);
+
+            foreach (var timesliceGroup in killmailsGroupedByTimeslice)
+            {
+                // No games in rating period.
+                if (timesliceGroup.Count() == 1 && timesliceGroup.First().Victim_Id == null)
+                {
+                    // Perform Rating calculation decary for all characters
+                }
+                else
+                {
+                    var characterIdsInRatingPeriod = new HashSet<int>();
+                    foreach (var killmailInTimesliceGroup in timesliceGroup)
+                    {
+                        characterIdsInRatingPeriod.Add(killmailInTimesliceGroup.Attacker_Id.Value);
+                        characterIdsInRatingPeriod.Add(killmailInTimesliceGroup.Victim_Id.Value);
+
+                        // Perform Rating calculation
+                    }
+
+                    // Perform Rating calculation decary for all charaters that are not in rating period
+                    var charaterIdsNotInRatingPeriod = allCharacterIds.Except(characterIdsInRatingPeriod);
+                }
+
+            }
+        }
+    }
+
+    public class KillmailModel 
+    {
+        public DateTime Timeslice { get; set; }
+        public int? Victim_Id { get; set; }
+        public int? Attacker_Id { get; set; }
     }
 }

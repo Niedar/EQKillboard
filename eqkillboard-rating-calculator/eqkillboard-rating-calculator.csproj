@@ -5,5 +5,8 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <RootNamespace>eqkillboard_rating_calculator</RootNamespace>
   </PropertyGroup>
-
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="1.50.5" />
+    <PackageReference Include="Npgsql" Version="4.0.2" />
+  </ItemGroup>
 </Project>
