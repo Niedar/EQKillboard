@@ -1,111 +1,170 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using Glicko2;
+using eqkillboard_rating_calculator.Db;
+using Microsoft.Extensions.Configuration;
+using Dapper;
+using System.Data;
 
 namespace eqkillboard_rating_calculator
 {
     class Program
     {
+        private static string DbConnectionString;
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
 
-            // Instantiate a RatingCalculator object.
-            // At instantiation, you can set the default rating for a player's volatility and
-            // the system constant for your game ("τ", which constrains changes in volatility
-            // over time) or just accept the defaults.
-            var calculator = new RatingCalculator(/* initVolatility, tau */);
+            // add json config for DBsettings
+            var builder = new ConfigurationBuilder()
+                            .SetBasePath(Directory.GetCurrentDirectory())
+                            .AddJsonFile("appsettings.json"); 
 
-            // Instantiate a Rating object for each player.
-            var player1 = new Rating(calculator/* , rating, ratingDeviation, volatility */);
-            var player2 = new Rating(calculator/* , rating, ratingDeviation, volatility */);
-            var player3 = new Rating(calculator/* , rating, ratingDeviation, volatility */);
+            var configuration = builder.Build(); 
 
-            // Instantiate a RatingPeriodResults object.
-            var results = new RatingPeriodResults();
+            DbConnectionString = configuration["ConnectionStrings:DefaultConnection"];
 
-            // Add game results to the RatingPeriodResults object until you reach the end of your rating period.
-            // Use addResult(winner, loser) for games that had an outcome.
-            results.AddResult(player1, player2);
-            // Use addDraw(player1, player2) for games that resulted in a draw.
-            results.AddDraw(player1, player2);
-            // Use addParticipant(player) to add players that played no games in the rating period.
-            results.AddParticipant(player3);
 
-            // Once you've reached the end of your rating period, call the updateRatings method
-            // against the RatingCalculator; this takes the RatingPeriodResults object as argument.
-            //  * Note that the RatingPeriodResults object is cleared down of game results once
-            //    the new ratings have been calculated.
-            //  * Participants remain within the RatingPeriodResults object, however, and will
-            //    have their rating deviations recalculated at the end of future rating periods
-            //    even if they don't play any games. This is in-line with Glickman's algorithm.
-            calculator.UpdateRatings(results);
-
-            // Access the getRating, getRatingDeviation, and getVolatility methods of each
-            // player's Rating to see the new values.
-            var players = new[] {player1, player2, player3};
-            for (var index = 0; index < players.Length; index++)
-            {
-                var player = players[index];
-                Console.WriteLine("Player #" + index + " values: " + player.GetRating() + ", " +
-                    player.GetRatingDeviation() + ", " + player.GetVolatility());
-            }
+            CalculateRatingFromStart();
         }
 
         public static void CalculateRatingFromStart()
         {
-            var query = @"
-            WITH hours AS (
-                SELECT generate_series(
-                    date_trunc('hour', (SELECT killed_at FROM killmail ORDER BY killed_at LIMIT 1)),
-                    date_trunc('hour', (SELECT killed_at FROM killmail ORDER BY killed_at DESC LIMIT 1)),
-                    '1 hour'::interval
-                ) AS hour
-            )
+            var calculator = new RatingCalculator();
+            var results = new RatingPeriodResults();
+            var allChars = new List<CharacterModel>();
 
-            SELECT
-				hours.hour,
-				killmail.victim_id,
-				killmail.attacker_id
-            FROM hours
-            LEFT JOIN killmail ON date_trunc('hour', killmail.killed_at) = hours.hour;       
-            ";
-
-            var allCharacterIds = new HashSet<int>();
             var allKillmails = new List<KillmailModel>();
+
+            using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
+                var query = @"
+                WITH hours AS (
+                    SELECT generate_series(
+                        date_trunc('hour', (SELECT killed_at FROM killmail ORDER BY killed_at LIMIT 1)),
+                        date_trunc('hour', (SELECT killed_at FROM killmail ORDER BY killed_at DESC LIMIT 1)),
+                        '1 hour'::interval
+                    ) AS hour
+                )
+
+                SELECT
+                    hours.hour,
+                    killmail.victim_id,
+                    killmail.attacker_id
+                FROM hours
+                LEFT JOIN killmail ON date_trunc('hour', killmail.killed_at) = hours.hour;       
+                ";
+
+                try {
+                    allKillmails = connection.Query<KillmailModel>(query)
+                                   .ToList();
+                }
+
+                catch (Exception ex) {
+                    Console.WriteLine(ex);
+                }
+            }
+
+            using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
+                var query = @"
+                SELECT id, name FROM character      
+                ";
+
+                try {
+                    allChars = connection.Query<CharacterModel>(query).ToList();
+                }
+
+                catch (Exception ex) {
+                    Console.WriteLine(ex);
+                }
+            }
+
+            // Set initial rating and rd for all characters
+            foreach (var character in allChars) {
+                character.rating = new Rating(calculator);
+            }
+
             var killmailsGroupedByTimeslice = allKillmails.ToLookup(x => x.Timeslice);
 
             foreach (var timesliceGroup in killmailsGroupedByTimeslice)
             {
+                // Console.WriteLine(timesliceGroup);
                 // No games in rating period.
-                if (timesliceGroup.Count() == 1 && timesliceGroup.First().Victim_Id == null)
+                if (timesliceGroup.Count() == 1 && timesliceGroup.First().victim_id == null)
                 {
-                    // Perform Rating calculation decary for all characters
+                    // Perform Rating calculation decay for all characters involved in kills so far
+                    calculator.UpdateRatings(results);
                 }
                 else
                 {
-                    var characterIdsInRatingPeriod = new HashSet<int>();
                     foreach (var killmailInTimesliceGroup in timesliceGroup)
                     {
-                        characterIdsInRatingPeriod.Add(killmailInTimesliceGroup.Attacker_Id.Value);
-                        characterIdsInRatingPeriod.Add(killmailInTimesliceGroup.Victim_Id.Value);
+                        if(killmailInTimesliceGroup.attacker_id == null) {
+                            continue;
+                        }
 
                         // Perform Rating calculation
+                        var attacker = allChars.Find(x => x.id == killmailInTimesliceGroup.attacker_id.Value);
+                        var victim = allChars.Find(x => x.id == killmailInTimesliceGroup.victim_id.Value);
+
+                        results.AddResult(attacker.rating, victim.rating);
+
+                        // Set updated_at property for later checks on updating rating
+                        var timesliceOffset = new TimeSpan(0, 1, 0, 0);;
+                        attacker.updated_at = killmailInTimesliceGroup.Timeslice + timesliceOffset;
+                        victim.updated_at = killmailInTimesliceGroup.Timeslice + timesliceOffset;
                     }
 
-                    // Perform Rating calculation decary for all charaters that are not in rating period
-                    var charaterIdsNotInRatingPeriod = allCharacterIds.Except(characterIdsInRatingPeriod);
+                    // Perform Rating calculations (includes decay for all characters that are not in rating period if they were involved in kills in earlier timeslices)
+                    calculator.UpdateRatings(results);
+                }
+            }
+
+            foreach (var character in allChars) {
+                InsertRating(character);
+            }
+
+        }
+
+        private static CharacterModel InsertRating(CharacterModel character) {
+            using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
+                var query = @"INSERT INTO rating (character_id, rating, rd, updated_at)
+                VALUES (@character_id, @rating, @rd, @updated_at)
+                ";
+
+                var parameters = new DynamicParameters();
+                parameters.Add("@character_id", character.id);
+                parameters.Add("@rating", character.rating.GetRating());
+                parameters.Add("@rd",character.rating.GetRatingDeviation());
+                parameters.Add("@updated_at", character.updated_at);
+
+                try {
+                    var result = connection.ExecuteScalar(query, parameters);
+                }
+                catch(Exception ex) {
+                    Console.WriteLine(ex);
                 }
 
+                return character;
             }
+
         }
     }
 
     public class KillmailModel 
     {
         public DateTime Timeslice { get; set; }
-        public int? Victim_Id { get; set; }
-        public int? Attacker_Id { get; set; }
+        public int? victim_id { get; set; }
+        public int? attacker_id { get; set; }
+        // public DateTime Timeslice { get; set; }
+    }
+
+    public class CharacterModel 
+    {
+        public int id { get; set; }
+        public string name { get; set; }
+
+        public Rating rating { get; set; }
+        public DateTime updated_at { get; set; }
     }
 }
