@@ -11,7 +11,7 @@ const { Footer, Content } = Layout;
 class App extends Component {
   render() {
     return (
-      <div class="container">
+      <div className="container">
         <Layout style={{ minHeight: '100vh' }}>
           <SiteHeader />
           <Layout>

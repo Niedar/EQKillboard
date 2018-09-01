@@ -2,9 +2,11 @@ import React, { Component } from 'react';
 import { Table } from 'antd';
 import moment from 'moment';
 import groupBy from 'lodash/groupBy';
-import {Link} from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const { Column } = Table;
+const killColor = "#daf7da";
+const deathColor = "#ffe8e7"
 
 class Killmails extends Component {
   groupKillmailsByKilledAt = killmails => {
@@ -17,6 +19,27 @@ class Killmails extends Component {
     return moment(dateTimeWithTimeZone).local().format("LT");
   }
 
+  onRow = (record, index) => {
+    var style = {};
+    console.log(this)
+    if (this.props.characterId) {
+      if (record.characterByAttackerId.id.toString() === this.props.characterId) {
+        style.backgroundColor = killColor;
+      } else if (record.characterByVictimId.id.toString() === this.props.characterId) {
+        style.backgroundColor = deathColor;
+      }
+    } else if (this.props.guildId) {
+      if (record.guildByAttackerGuildId && record.guildByAttackerGuildId.id.toString() === this.props.guildId) {
+        style.backgroundColor = killColor;
+      } else if (record.guildByVictimGuildId && record.guildByVictimGuildId.id.toString() === this.props.guildId) {
+        style.backgroundColor = deathColor;
+      }
+    }
+    return {
+      style: style
+    };
+  }
+
   render() {
     var killmailsGroupedByKilledAt = this.groupKillmailsByKilledAt(this.props.killmails);
     return (
@@ -25,7 +48,7 @@ class Killmails extends Component {
         return (
           <div key={`killmailTableGroup-${index}`}>
             <h2 style={{marginLeft: "10px"}}>{dateKey}</h2>
-            <Table dataSource={killmails} rowKey="nodeId" pagination={false}>
+            <Table dataSource={killmails} rowKey="nodeId" pagination={false} onRow={this.onRow}>
               <Column 
                 title="Time"
                 dataIndex="killedAt"

@@ -83,7 +83,7 @@ const GET_ALLKILLMAILS = gql`
 
 const GET_CHARACTERKILLMAILS = gql`
   query characterKilmails($id: Int, $first: Int, $last: Int, $after: Cursor, $before: Cursor) {
-    allKillmails(condition: {attackerId: $id}, orderBy: KILLED_AT_DESC, first: $first, last: $last, after: $after, before: $before) {
+    allKillmails(filter: { or: [{ victimId: { equalTo: $id } }, { attackerId: { equalTo: $id} }] }, orderBy: KILLED_AT_DESC, first: $first, last: $last, after: $after, before: $before) {
       nodes {
         ...KillmailData
       },
@@ -100,7 +100,7 @@ const GET_CHARACTERKILLMAILS = gql`
 
 const GET_GUILDKILLMAILS = gql`
   query guildKilmails($id: Int, $first: Int, $last: Int, $after: Cursor, $before: Cursor) {
-    allKillmails(condition: {attackerGuildId: $id}, orderBy: KILLED_AT_DESC, first: $first, last: $last, after: $after, before: $before) {
+    allKillmails(filter: { or: [{ victimGuildId: { equalTo: $id } }, { attackerGuildId: { equalTo: $id} }] }, orderBy: KILLED_AT_DESC, first: $first, last: $last, after: $after, before: $before) {
       nodes {
         ...KillmailData
       },
