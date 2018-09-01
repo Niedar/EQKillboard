@@ -1,9 +1,22 @@
 @import '~antd/dist/antd.css';
 
 body { 
-  background: url(https://images4.alphacoders.com/240/thumb-1920-240836.jpg) no-repeat center center fixed; 
+  background: no-repeat center center fixed; 
   -webkit-background-size: cover;
   -moz-background-size: cover;
   -o-background-size: cover;
   background-size: cover;
+  overflow-y: scroll; 
+  overflow-x: hidden;
+}
+
+.container {
+  margin: 0 auto; 
+  background: #fafafa;
+}
+
+@media all and (min-width: 991px) {
+  .container {
+    width: 58%;
+  }
 }

@@ -34,7 +34,7 @@ class Killmails extends Component {
                   // TODO: This needs to be displayed in local time
                   this.getLocalTime(record.killedAt)
                 )}
-                width={75}
+                width={90}
               />
               <Column
                 title="Zone"
