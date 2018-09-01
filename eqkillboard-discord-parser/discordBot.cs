@@ -326,28 +326,36 @@ namespace eqkillboard_discord_parser
 
         private async Task<int> GetOrInsertCharacter(IDbConnection connection, string name, int? guildId)
         {
+            var parameters = new DynamicParameters();
+            
             var charSelectQuery = @"SELECT id FROM character WHERE name = @Name;";
             var characterId = await connection.ExecuteScalarAsync<int?>(charSelectQuery, new { Name = name});
             if (characterId != null)
             {
+                var charUpdateQuery = @"UPDATE character SET guild_id = @GuildId WHERE id = @Id";
+                parameters.Add("@Id", characterId.Value);
+                parameters.Add("@GuildId", guildId);
+                
+                await connection.ExecuteAsync(charUpdateQuery, parameters);
                 return characterId.Value;
             }
+            else
+            {
+                var victimCharInsertSql = @"INSERT INTO character (name, guild_id) 
+                            VALUES (@VictimName, @GuildId)
+                            ON CONFLICT(name) DO UPDATE 
+                            SET name = EXCLUDED.name,
+                            guild_id = EXCLUDED.guild_id
+                            RETURNING id;
+                            ";
 
-            var parameters = new DynamicParameters();
-            var victimCharInsertSql = @"INSERT INTO character (name, guild_id) 
-                        VALUES (@VictimName, @GuildId)
-                        ON CONFLICT(name) DO UPDATE 
-                        SET name = EXCLUDED.name,
-                        guild_id = EXCLUDED.guild_id
-                        RETURNING id;
-                        ";
+                parameters.Add("@VictimName", name);
+                parameters.Add("@GuildId", guildId);
+                parameters.Add("@VictimId", direction: ParameterDirection.Output);
 
-            parameters.Add("@VictimName", name);
-            parameters.Add("@GuildId", guildId);
-            parameters.Add("@VictimId", direction: ParameterDirection.Output);
-
-            await connection.ExecuteAsync(victimCharInsertSql, parameters);
-            return parameters.Get<int>("VictimId");            
+                await connection.ExecuteAsync(victimCharInsertSql, parameters);
+                return parameters.Get<int>("VictimId");            
+            }
         }
 
         private async Task InsertClassLevel(IDbConnection connection, CharacterModel character, Killmail insertedKillmail, IMessage message) {

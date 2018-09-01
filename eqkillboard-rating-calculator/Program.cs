@@ -49,10 +49,20 @@ namespace eqkillboard_rating_calculator
 
                 SELECT
                     hours.hour,
+					killmail.id,
+					killmail.killed_at,
                     killmail.victim_id,
                     killmail.attacker_id
                 FROM hours
-                LEFT JOIN killmail ON date_trunc('hour', killmail.killed_at) = hours.hour;       
+                LEFT JOIN killmail ON date_trunc('hour', killmail.killed_at) = hours.hour
+				LEFT JOIN killmail AS prev ON prev.killed_at = (SELECT MAX(killed_at) 
+														 FROM killmail AS k1
+														 WHERE k1.victim_id = killmail.victim_id
+														 AND k1.killed_at < killmail.killed_at
+														)
+				WHERE prev.killed_at IS NULL OR (killmail.killed_at - prev.killed_at) > make_interval(mins => 10)
+				ORDER BY hours.hour, killmail.killed_at
+				;  
                 ";
 
                 try {
