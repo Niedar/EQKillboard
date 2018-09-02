@@ -21,7 +21,6 @@ class Killmails extends Component {
 
   onRow = (record, index) => {
     var style = {};
-    console.log(this)
     if (this.props.characterId) {
       if (record.characterByAttackerId.id.toString() === this.props.characterId) {
         style.backgroundColor = killColor;

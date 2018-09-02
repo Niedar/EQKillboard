@@ -9,12 +9,15 @@ class SiteHeader extends Component {
     return (
         <Header>
           <Row>
-            <Col xxl={4} xl={5} lg={8} md={8} sm={24} xs={24}>
+            <Col xxl={4} xl={6} lg={6} md={8} sm={12} xs={24}>
               <Link to={"/"} style={{ textDecoration: "none"}}>
                 <h1 style={{color: "white"}}>EQKillboard</h1>
               </Link>
             </Col>
-            <Col xxl={20} xl={19} lg={16} md={16} sm={0} xs={0}>
+            <Col xxl={4} xl={6} lg={0} md={0} sm={0} xs={0}>
+              <a href="https://riseofzek.com/"><img src="/rozlogo.png" style={{width: "150px"}} /></a>
+            </Col>
+            <Col xxl={16} xl={12} lg={18} md={16} sm={12} xs={0}>
               <Search />
             </Col>
           </Row>

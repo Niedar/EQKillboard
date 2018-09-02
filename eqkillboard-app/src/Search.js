@@ -92,12 +92,12 @@ class Search extends React.Component {
     }
     render() {
         return (
-            <div className="certain-category-search-wrapper" style={{ width: 300, float: "right" }}>
+            <div className="certain-category-search-wrapper" style={{ width: 250, float: "right" }}>
               <AutoComplete
                 className="certain-category-search"
                 dropdownClassName="certain-category-search-dropdown"
                 dropdownMatchSelectWidth={false}
-                dropdownStyle={{ width: 300 }}
+                dropdownStyle={{ width: 250 }}
                 size="large"
                 style={{ width: '100%' }}
                 dataSource={createOptions(this.state.suggestions)}
