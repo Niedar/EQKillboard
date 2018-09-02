@@ -34,7 +34,10 @@ sqitch deploy db:pg:database_name
 ```
 sudo apt-get install nodejs
 sudo npm install postgraphile -g
+sudo npm install graphql -g
+sudo npm install pg -g
+sudo npm install postgraphile-plugin-connection-filter -g
 
-postgraphile -c postgres://user:password@localhost/database_name \
+postgraphile --append-plugins postgraphile-plugin-connection-filter -c postgres://user:password@localhost/database_name \
 --schema public
 ```
