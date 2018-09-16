@@ -5,6 +5,7 @@ AFTER=postgresql.service
 [Service]
 WorkingDirectory=/opt/eqkillboard-discord-parser
 ExecStart=/usr/bin/dotnet /opt/eqkillboard-discord-parser/eqkillboard-discord-parser.dll
+RuntimeMaxSec=43200
 Restart=always
 RestartSec=10
 SyslogIdentifier=eqkillboard-discord-parser
