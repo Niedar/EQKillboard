@@ -124,81 +124,80 @@ namespace eqkillboard_discord_parser
         {
             KillMailParser killmailParser = new KillMailParser();
             var rawKillMailId = 0;
-
-            // Check if killmail exists
-            using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
-                var selectRawKillmailSql = @"SELECT *
-                                            FROM killmail_raw 
-                                            WHERE discord_message_id = @messageId";
-
-                try {
-                    var messageIdSigned = Convert.ToInt64(message.Id);
-                    var affectedRows = await connection.QueryAsync(selectRawKillmailSql, new { messageId = messageIdSigned });
-                    
-                    if (affectedRows.Count() > 0) {
-                        return;
-                    }
-                }
-
-                catch (Exception ex) {
-                    Console.WriteLine(ex);
-                }
-            }
-
-            // Process message if nothing found
             KillmailModel parsedKillmail = null;
-            Killmail insertedKillmail = null;
+            
+            parsedKillmail = killmailParser.ExtractKillmail(message.Content);
 
-            using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
+            if (parsedKillmail != null)
+                {
+                // Check if killmail exists
+                using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
+                    var selectRawKillmailSql = @"SELECT *
+                                                FROM killmail_raw 
+                                                WHERE discord_message_id = @messageId";
 
-                connection.Open();
-
-                using (var killmailTransaction = connection.BeginTransaction()) {
-                    try
-                    {
-                        rawKillMailId = await InsertRawKillmailAsync(connection, message);
-
-                        // Parse raw killmail
-                        parsedKillmail = killmailParser.ExtractKillmail(message.Content);
-                        parsedKillmail.killmail_raw_id = rawKillMailId;
-
-                        insertedKillmail = await InsertParsedKillmailAsync(connection, parsedKillmail);
-
-                        killmailTransaction.Commit();                        
+                    try {
+                        var messageIdSigned = Convert.ToInt64(message.Id);
+                        var affectedRows = await connection.QueryAsync(selectRawKillmailSql, new { messageId = messageIdSigned });
+                        
+                        if (affectedRows.Count() > 0) {
+                            return;
+                        }
                     }
-                    catch (Exception ex)
-                    {
+
+                    catch (Exception ex) {
                         Console.WriteLine(ex);
-                        killmailTransaction.Rollback();
                     }
                 }
-            }
 
-            // Get level and class for each char
-            var scraper = new Scraper();
-            var victim = new CharacterModel{
-                name = parsedKillmail.victimName,
-                isAttacker = false
-            };
-            var attacker = new CharacterModel{
-                name = parsedKillmail.attackerName,
-                isAttacker = true
-            };
+                Killmail insertedKillmail = null;
+                using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
 
-            victim.classLevel = await scraper.ScrapeCharInfo(victim.name);
-            attacker.classLevel = await scraper.ScrapeCharInfo(attacker.name); 
+                    connection.Open();
 
-            using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
-                if (!string.IsNullOrEmpty(victim.classLevel))
-                {
-                    await InsertClassLevel(connection, victim, insertedKillmail, message);
+                    using (var killmailTransaction = connection.BeginTransaction()) {
+                        try
+                        {
+                            rawKillMailId = await InsertRawKillmailAsync(connection, message);                       
+                            parsedKillmail.killmail_raw_id = rawKillMailId;
+
+                            insertedKillmail = await InsertParsedKillmailAsync(connection, parsedKillmail);
+
+                            killmailTransaction.Commit();                        
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine(ex);
+                            killmailTransaction.Rollback();
+                        }
+                    }
                 }
-                if (!string.IsNullOrEmpty(attacker.classLevel))
-                {
-                    await InsertClassLevel(connection, attacker, insertedKillmail, message);  
-                } 
+
+                // Get level and class for each char
+                var scraper = new Scraper();
+                var victim = new CharacterModel{
+                    name = parsedKillmail.victimName,
+                    isAttacker = false
+                };
+                var attacker = new CharacterModel{
+                    name = parsedKillmail.attackerName,
+                    isAttacker = true
+                };
+
+                victim.classLevel = await scraper.ScrapeCharInfo(victim.name);
+                attacker.classLevel = await scraper.ScrapeCharInfo(attacker.name); 
+
+                using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
+                    if (!string.IsNullOrEmpty(victim.classLevel))
+                    {
+                        await InsertClassLevel(connection, victim, insertedKillmail, message);
+                    }
+                    if (!string.IsNullOrEmpty(attacker.classLevel))
+                    {
+                        await InsertClassLevel(connection, attacker, insertedKillmail, message);  
+                    } 
+                }
             }
-        
         }
  
         private async Task<int> InsertRawKillmailAsync(IDbConnection connection, IMessage message)

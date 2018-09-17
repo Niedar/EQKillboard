@@ -22,30 +22,37 @@ namespace eqkillboard_discord_parser {
         public KillmailModel ExtractKillmail(string input) {
             var extractedKillmail = new KillmailModel();
             Match killmailMatch = Regex.Match(input, pattern);
-            foreach (Group group in killmailMatch.Groups) {
-                switch(group.Name)
-                {
-                    case "datetime":
-                        extractedKillmail.killedAt = group.Value;
-                        break;
-                    case "victimName":
-                        extractedKillmail.victimName = group.Value;
-                        break;
-                    case "victimGuild":
-                        extractedKillmail.victimGuild = group.Value;
-                        break;
-                    case "attackerName":
-                        extractedKillmail.attackerName = group.Value;
-                        break;
-                    case "attackerGuild":
-                        extractedKillmail.attackerGuild = group.Value;
-                        break;
-                    case "zone":
-                        extractedKillmail.zone = group.Value;
-                        break;
-                    default:
-                        break;
+            if (killmailMatch.Success)
+            {
+                foreach (Group group in killmailMatch.Groups) {
+                    switch(group.Name)
+                    {
+                        case "datetime":
+                            extractedKillmail.killedAt = group.Value;
+                            break;
+                        case "victimName":
+                            extractedKillmail.victimName = group.Value;
+                            break;
+                        case "victimGuild":
+                            extractedKillmail.victimGuild = group.Value;
+                            break;
+                        case "attackerName":
+                            extractedKillmail.attackerName = group.Value;
+                            break;
+                        case "attackerGuild":
+                            extractedKillmail.attackerGuild = group.Value;
+                            break;
+                        case "zone":
+                            extractedKillmail.zone = group.Value;
+                            break;
+                        default:
+                            break;
+                    }
                 }
+            }
+            else
+            {
+                return null;
             }
 
             return extractedKillmail;
