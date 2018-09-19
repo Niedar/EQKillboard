@@ -53,9 +53,16 @@ class CharacterPage extends Component {
             if (loading) return null;
             if (error) return `Error! ${error.message}`;
             
+            let characterGuildHeader;
+            if (data.characterById.guildByGuildId) {
+              characterGuildHeader = <h1>{data.characterById.name} &lt;{data.characterById.guildByGuildId.name}&gt;</h1>
+            } else {
+              characterGuildHeader = <h1>{data.characterById.name}</h1>
+            }
+
             return (
               <div style={{marginLeft: "10px"}}>
-                <h1>{data.characterById.name}</h1>
+                {characterGuildHeader}
                 <h2>Kills: {data.characterById.killmailsByAttackerId.totalCount}</h2>
                 <h2>Deaths: {data.characterById.killmailsByVictimId.totalCount}</h2>
               </div>
