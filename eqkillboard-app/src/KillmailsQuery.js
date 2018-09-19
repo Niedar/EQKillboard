@@ -21,7 +21,8 @@ export default class KillmailsQuery extends Component {
       query = GET_GUILDKILLMAILS;
       id = guildId
     } else if (zoneId) {
-
+      query = GET_ZONEKILLMAILS;
+      id = zoneId
     } else {
       query = GET_ALLKILLMAILS;
     }
@@ -101,6 +102,23 @@ const GET_CHARACTERKILLMAILS = gql`
 const GET_GUILDKILLMAILS = gql`
   query guildKilmails($id: Int, $first: Int, $last: Int, $after: Cursor, $before: Cursor) {
     allKillmails(filter: { or: [{ victimGuildId: { equalTo: $id } }, { attackerGuildId: { equalTo: $id} }] }, orderBy: KILLED_AT_DESC, first: $first, last: $last, after: $after, before: $before) {
+      nodes {
+        ...KillmailData
+      },
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+        startCursor,
+        endCursor
+      }    
+    }
+  }
+  ${KillmailDataFragment}
+`;
+
+const GET_ZONEKILLMAILS = gql`
+  query zoneKilmails($id: Int, $first: Int, $last: Int, $after: Cursor, $before: Cursor) {
+    allKillmails(filter: { zoneId: { equalTo: $id } }, orderBy: KILLED_AT_DESC, first: $first, last: $last, after: $after, before: $before) {
       nodes {
         ...KillmailData
       },

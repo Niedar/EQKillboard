@@ -4,6 +4,7 @@ import { Route, Switch, Redirect } from 'react-router-dom'
 import HomePage from './HomePage';
 import CharacterPage from './CharacterPage';
 import GuildPage from './GuildPage';
+import ZonePage from './ZonePage';
 import './App.css';
 import SiteHeader from './SiteHeader';
 
@@ -23,6 +24,8 @@ class App extends Component {
                 <Route exact path="/character/:characterId/:cursorDirection(before|after)/:cursor" component={CharacterPage}/>
                 <Route exact path="/guild/:guildId" component={GuildPage}/>
                 <Route exact path="/guild/:guildId/:cursorDirection(before|after)/:cursor" component={GuildPage}/>
+                <Route exact path="/zone/:zoneId" component={ZonePage}/>
+                <Route exact path="/zone/:zoneId/:cursorDirection(before|after)/:cursor" component={ZonePage}/>
                 <Route>
                   <Redirect to="/" />
                 </Route>

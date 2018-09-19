@@ -63,7 +63,7 @@ class Killmails extends Component {
                 dataIndex="zoneByZoneId"
                 key={`zoneByZoneId-${index}`}
                 render={(text, record) => (
-                  <a href="javascript:;">{record.zoneByZoneId.name}</a>
+                  <Link to={`/zone/${record.zoneByZoneId.id}`}>{record.zoneByZoneId.name}</Link>
                 )}
                 width={150}
               /> 
