@@ -3,3 +3,4 @@
 %uri=https://github.com/Niedar/EQKillboard
 
 0001_initial_schema 2018-07-19T19:50:14Z Niedar <Niedar@gmail.com> # Create the initial database schema for EQKillboard
+@v1.0.0 2019-08-12T18:36:12Z Niedar <Niedar@gmail.com> # Initial release
