@@ -1,4 +1,4 @@
-namespace eqkillboard_discord_parser.Models {
+namespace EQKillboardDiscordParser.Models {
     public class KillmailModel {
         public string victimName { get; set; }
         public string victimGuild { get; set; }

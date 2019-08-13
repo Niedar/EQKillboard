@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AngleSharp;
 
-namespace eqkillboard_discord_parser {
+namespace EQKillboardDiscordParser {
     public class Scraper {
     private IConfiguration config { get; set; }
     public string charBrowserUrl { get; set; }

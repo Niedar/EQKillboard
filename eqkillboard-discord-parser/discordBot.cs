@@ -6,17 +6,17 @@ using Discord.WebSocket;
 using Discord.Net.Providers.WS4Net;
 using System.IO;
 using Microsoft.Extensions.Configuration;
-using eqkillboard_discord_parser.Db;
+using EQKillboardDiscordParser.Db;
 using Dapper;
-using eqkillboard_discord_parser.Entities;
+using EQKillboardDiscordParser.Entities;
 using System.Data;
 using System.Collections.Generic;
-using eqkillboard_discord_parser.Models;
+using EQKillboardDiscordParser.Models;
 using System.Globalization;
 using Npgsql;
 using System.Transactions;
 
-namespace eqkillboard_discord_parser
+namespace EQKillboardDiscordParser
 {
     public class Program
     {

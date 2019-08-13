@@ -1,9 +1,9 @@
 using System;
 using System.Text.RegularExpressions;
-using eqkillboard_discord_parser.Entities;
-using eqkillboard_discord_parser.Models;
+using EQKillboardDiscordParser.Entities;
+using EQKillboardDiscordParser.Models;
 
-namespace eqkillboard_discord_parser {
+namespace EQKillboardDiscordParser {
     public class KillMailParser {
         private string pattern { get; set; } = @"(?<datetime>\d{4}[-]\d{2}[-]\d{2}\s*\d{2}[:]\d{2}[:]\d{2})"
                                                 + @"\s(?<victimName>.*)"

@@ -1,5 +1,5 @@
 
-namespace eqkillboard_discord_parser.Entities {
+namespace EQKillboardDiscordParser.Entities {
     class Guild
         {
             public int Id { get; set; }
