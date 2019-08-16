@@ -4,8 +4,7 @@
 BEGIN;
 
 CREATE TABLE killmail_involved (
-    id SERIAL PRIMARY KEY,
-    killmail_id INTEGER REFERENCES killmail NOT NULL,
+    killmail_id INTEGER PRIMARY KEY REFERENCES killmail NOT NULL,
     attacker_id INTEGER REFERENCES character NOT NULL,
     attacker_guild_id INTEGER REFERENCES guild,
     attacker_level INTEGER,
@@ -38,16 +37,20 @@ CREATE TABLE item_sale (
     item_id INTEGER REFERENCES item NOT NULL,
     price INTEGER NOT NULL
 );
+CREATE INDEX item_sale_item_id_index ON killmail_involved(killmail_id);
 
--- VIEW
-CREATE TABLE item_stats (
-    item_id INTEGER REFERENCES item PRIMARY KEY,
-    average_price INTEGER,
-    max_price INTEGER,
-    total_sales INTEGER
-);
+
+CREATE VIEW item_stats AS
+SELECT
+    item_id,
+    AVG(price) AS average_price,
+    MAX(price) AS max_price,
+    COUNT(item_id) AS total_sales
+FROM item_sale
+GROUP BY item_id;
 
 ALTER TABLE killmail ADD looted_item INTEGER REFERENCES item;
 ALTER TABLE killmail ADD looted_by INTEGER REFERENCES character;
+ALTER TABLE character ADD is_npc BOOLEAN NOT NULL DEFAULT false;
 
 COMMIT;
