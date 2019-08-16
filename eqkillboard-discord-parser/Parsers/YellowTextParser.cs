@@ -14,8 +14,8 @@ namespace EQKillboard.DiscordParser.Parsers {
                                                 + @"\sin"
                                                 + @"\s(?<zone>.*)!";
                                                         
-        public KillMailModel ExtractKillmail(string input) {
-            var extractedKillmail = new KillMailModel();
+        public ParsedKillMail ExtractKillmail(string input) {
+            var extractedKillmail = new ParsedKillMail();
             Match killmailMatch = Regex.Match(input, pattern);
             if (killmailMatch.Success)
             {

@@ -122,7 +122,7 @@ namespace EQKillboard.DiscordParser
         {
             YellowTextParser killmailParser = new YellowTextParser();
             var rawKillMailId = 0;
-            KillMailModel parsedKillmail = null;
+            ParsedKillMail parsedKillmail = null;
             
             parsedKillmail = killmailParser.ExtractKillmail(message.Content);
 
@@ -222,7 +222,7 @@ namespace EQKillboard.DiscordParser
             return killmailRawId;
         }
 
-        private async Task<Killmail> InsertParsedKillmailAsync(IDbConnection connection, KillMailModel parsedKillmailModel) 
+        private async Task<Killmail> InsertParsedKillmailAsync(IDbConnection connection, ParsedKillMail parsedKillmailModel) 
         {
             var killmailToInsert = new Killmail();
 
