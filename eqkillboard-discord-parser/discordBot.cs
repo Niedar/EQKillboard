@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using Discord.Net.Providers.WS4Net;
 using System.IO;
 using Microsoft.Extensions.Configuration;
 using EQKillboardDiscordParser.Db;
@@ -46,9 +45,6 @@ namespace EQKillboardDiscordParser
             discordConfig = new DiscordSocketConfig {
                 MessageCacheSize = 100
             };
-
-            // Only needed for Win 7, remove otherwise
-            discordConfig.WebSocketProvider = WS4NetProvider.Instance; 
 
             client = new DiscordSocketClient(discordConfig);
             client.Log += Log;
