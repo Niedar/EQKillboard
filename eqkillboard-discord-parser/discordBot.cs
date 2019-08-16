@@ -5,17 +5,19 @@ using Discord;
 using Discord.WebSocket;
 using System.IO;
 using Microsoft.Extensions.Configuration;
-using EQKillboardDiscordParser.Db;
+using EQKillboard.DiscordParser.Db;
 using Dapper;
-using EQKillboardDiscordParser.Entities;
+using EQKillboard.DiscordParser.Entities;
 using System.Data;
 using System.Collections.Generic;
-using EQKillboardDiscordParser.Models;
+using EQKillboard.DiscordParser.Models;
+using EQKillboard.DiscordParser.Parsers;
+using EQKillboard.DiscordParser.Scrapers;
 using System.Globalization;
 using Npgsql;
 using System.Transactions;
 
-namespace EQKillboardDiscordParser
+namespace EQKillboard.DiscordParser
 {
     public class Program
     {
@@ -118,9 +120,9 @@ namespace EQKillboardDiscordParser
 
         private async Task ProcessMessage(IMessage message)
         {
-            KillMailParser killmailParser = new KillMailParser();
+            YellowTextParser killmailParser = new YellowTextParser();
             var rawKillMailId = 0;
-            KillmailModel parsedKillmail = null;
+            KillMailModel parsedKillmail = null;
             
             parsedKillmail = killmailParser.ExtractKillmail(message.Content);
 
@@ -155,7 +157,7 @@ namespace EQKillboardDiscordParser
                         try
                         {
                             rawKillMailId = await InsertRawKillmailAsync(connection, message);                       
-                            parsedKillmail.killmail_raw_id = rawKillMailId;
+                            parsedKillmail.KillMailRawId = rawKillMailId;
 
                             insertedKillmail = await InsertParsedKillmailAsync(connection, parsedKillmail);
 
@@ -170,13 +172,13 @@ namespace EQKillboardDiscordParser
                 }
 
                 // Get level and class for each char
-                var scraper = new Scraper();
+                var scraper = new CharBrowserScraper();
                 var victim = new CharacterModel{
-                    name = parsedKillmail.victimName,
+                    name = parsedKillmail.VictimName,
                     isAttacker = false
                 };
                 var attacker = new CharacterModel{
-                    name = parsedKillmail.attackerName,
+                    name = parsedKillmail.AttackerName,
                     isAttacker = true
                 };
 
@@ -220,7 +222,7 @@ namespace EQKillboardDiscordParser
             return killmailRawId;
         }
 
-        private async Task<Killmail> InsertParsedKillmailAsync(IDbConnection connection, KillmailModel parsedKillmailModel) 
+        private async Task<Killmail> InsertParsedKillmailAsync(IDbConnection connection, KillMailModel parsedKillmailModel) 
         {
             var killmailToInsert = new Killmail();
 
@@ -231,15 +233,15 @@ namespace EQKillboardDiscordParser
             //var killedAtLocalTime = DateTime.SpecifyKind(DateTime.Parse(parsedKillmailModel.killedAt, USCultureInfo), DateTimeKind.Unspecified);
             //killedAtLocalTime.InZone(timezone);
 
-            var killedAtLocalTime = DateTime.SpecifyKind(DateTime.Parse(parsedKillmailModel.killedAt, USCultureInfo), DateTimeKind.Utc);
+            var killedAtLocalTime = DateTime.SpecifyKind(DateTime.Parse(parsedKillmailModel.KilledAt, USCultureInfo), DateTimeKind.Utc);
             
             killmailToInsert.killed_at = killedAtLocalTime;
-            killmailToInsert.killmail_raw_id = parsedKillmailModel.killmail_raw_id;
-            killmailToInsert.victim_guild_id = await GetOrInsertGuild(connection, parsedKillmailModel.victimGuild);
-            killmailToInsert.attacker_guild_id = await GetOrInsertGuild(connection, parsedKillmailModel.attackerGuild);
-            killmailToInsert.zone_id = await GetOrInsertZone(connection, parsedKillmailModel.zone);
-            killmailToInsert.victim_id =  await GetOrInsertCharacter(connection, parsedKillmailModel.victimName, killmailToInsert.victim_guild_id);
-            killmailToInsert.attacker_id = await GetOrInsertCharacter(connection, parsedKillmailModel.attackerName, killmailToInsert.attacker_guild_id);
+            killmailToInsert.killmail_raw_id = parsedKillmailModel.KillMailRawId;
+            killmailToInsert.victim_guild_id = await GetOrInsertGuild(connection, parsedKillmailModel.VictimGuild);
+            killmailToInsert.attacker_guild_id = await GetOrInsertGuild(connection, parsedKillmailModel.AttackerGuild);
+            killmailToInsert.zone_id = await GetOrInsertZone(connection, parsedKillmailModel.Zone);
+            killmailToInsert.victim_id =  await GetOrInsertCharacter(connection, parsedKillmailModel.VictimName, killmailToInsert.victim_guild_id);
+            killmailToInsert.attacker_id = await GetOrInsertCharacter(connection, parsedKillmailModel.AttackerName, killmailToInsert.attacker_guild_id);
 
             var dynamicParams = new DynamicParameters();
             dynamicParams.AddDynamicParams(new {
@@ -359,14 +361,12 @@ namespace EQKillboardDiscordParser
             var historyLengthUpdateSetting = new TimeSpan(0, 12, 0, 0);
             var serverTime = new DateTimeOffset(DateTime.Now);
             
-            var classLevelParser = new KillMailParser();
-            
-            var levelString = classLevelParser.ExtractLevel(character.classLevel);
+            var levelString = CharBrowserParser.ParseLevel(character.classLevel);
             if (!string.IsNullOrEmpty(levelString))
             {
                 character.level = Convert.ToInt32(levelString);
             }
-            character.className = classLevelParser.ExtractChar(character.classLevel);
+            character.className = CharBrowserParser.ParseChar(character.classLevel);
 
             // Update character level and killmail character level if not older than historyLengthUpdateSetting
             var insertLevelSql = @"UPDATE character 

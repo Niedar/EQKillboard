@@ -1,6 +1,6 @@
 using System;
 
-namespace EQKillboardDiscordParser.Entities {
+namespace EQKillboard.DiscordParser.Entities {
     public class Killmail {
         public int id { get; set; }
         public int victim_id { get; set; }

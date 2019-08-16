@@ -4,12 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using AngleSharp;
 
-namespace EQKillboardDiscordParser {
-    public class Scraper {
+namespace EQKillboard.DiscordParser.Scrapers {
+    public class CharBrowserScraper {
     private IConfiguration config { get; set; }
     public string charBrowserUrl { get; set; }
 
-    public Scraper() {
+    public CharBrowserScraper() {
         config = Configuration.Default.WithDefaultLoader();
         charBrowserUrl = "https://riseofzek.com/charbrowser/index.php?page=character&char=";
     }

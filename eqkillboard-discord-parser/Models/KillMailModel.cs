@@ -1,12 +1,21 @@
-namespace EQKillboardDiscordParser.Models {
-    public class KillmailModel {
-        public string victimName { get; set; }
-        public string victimGuild { get; set; }
-        public string attackerName { get; set; }
-        public string attackerGuild { get; set; }
-        public string zone { get; set; }
-        public int zoneId { get; set; }
-        public string killedAt { get; set; }
-        public int killmail_raw_id { get; set; }
+namespace EQKillboard.DiscordParser.Models {
+    public class KillMailModel {
+        public string VictimName { get; set; }
+        public string VictimGuild { get; set; }
+        public string AttackerName { get; set; }
+        public string AttackerGuild { get; set; }
+        public string Zone { get; set; }
+        public string KilledAt { get; set; }
+        public int KillMailRawId { get; set; }
+    }
+
+    public class KillMailInvolvedModel {
+        public string AttackerName { get; set; }
+        public string AttackerGuild { get; set; }
+        public int? AttackerLevel { get; set; }
+        public int? MeleeDamage { get; set; }
+        public int? MeleeHits { get; set; }
+        public int? SpellDamage { get; set; }
+        public int? SpellHits { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-namespace EQKillboardDiscordParser.Models {
+namespace EQKillboard.DiscordParser.Models {
     public class CharacterModel {
         public string name { get; set; }
         public int? classId { get; set; }
