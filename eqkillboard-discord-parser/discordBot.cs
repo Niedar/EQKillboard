@@ -25,6 +25,7 @@ namespace EQKillboard.DiscordParser
         private DiscordSocketClient client;
         private DiscordSocketConfig discordConfig;
         private string DbConnectionString;
+        private DbService dbService;
         private IMessage lastRetrievedDiscordMsg;
         public static void Main(string[] args) {
             new Program().MainAsync().GetAwaiter().GetResult();
@@ -42,6 +43,7 @@ namespace EQKillboard.DiscordParser
 
             // call connection string from config
             DbConnectionString = configuration["ConnectionStrings:DefaultConnection"];
+            dbService = new DbService();
 
             // create Config for Discord
             discordConfig = new DiscordSocketConfig {
@@ -127,49 +129,14 @@ namespace EQKillboard.DiscordParser
             parsedKillmail = killmailParser.ExtractKillmail(message.Content);
 
             if (parsedKillmail != null)
+            {
+                var existingRawKillMail = await dbService.GetRawKillMailAsync(message.Id);
+                if (existingRawKillMail != null)
                 {
-                // Check if killmail exists
-                using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
-                    var selectRawKillmailSql = @"SELECT *
-                                                FROM killmail_raw 
-                                                WHERE discord_message_id = @messageId";
-
-                    try {
-                        var messageIdSigned = Convert.ToInt64(message.Id);
-                        var affectedRows = await connection.QueryAsync(selectRawKillmailSql, new { messageId = messageIdSigned });
-                        
-                        if (affectedRows.Count() > 0) {
-                            return;
-                        }
-                    }
-
-                    catch (Exception ex) {
-                        Console.WriteLine(ex);
-                    }
+                    return;
                 }
 
-                Killmail insertedKillmail = null;
-                using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
-
-                    connection.Open();
-
-                    using (var killmailTransaction = connection.BeginTransaction()) {
-                        try
-                        {
-                            rawKillMailId = await InsertRawKillmailAsync(connection, message);                       
-                            parsedKillmail.KillMailRawId = rawKillMailId;
-
-                            insertedKillmail = await InsertParsedKillmailAsync(connection, parsedKillmail);
-
-                            killmailTransaction.Commit();                        
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine(ex);
-                            killmailTransaction.Rollback();
-                        }
-                    }
-                }
+                var insertedKillmail = await dbService.InsertRawAndParsedKillMailAsync(message, parsedKillmail);
 
                 // Get level and class for each char
                 var scraper = new CharBrowserScraper();
@@ -198,163 +165,6 @@ namespace EQKillboard.DiscordParser
             }
         }
  
-        private async Task<int> InsertRawKillmailAsync(IDbConnection connection, IMessage message)
-        {
-            var messageIdSigned = Convert.ToInt64(message.Id);
-            Console.WriteLine(message.Content.ToString());
-
-            DynamicParameters parameters = new DynamicParameters();
-            
-            var sql = @"INSERT INTO killmail_raw (discord_message_id, message) Values (@MessageId, @Message)
-           ON CONFLICT (discord_message_id) DO UPDATE
-           SET message = EXCLUDED.message
-           RETURNING id
-           "; // insert raw killmail
-
-            parameters.Add("@MessageId", messageIdSigned);
-            parameters.Add("@Message", message.Content);
-
-            parameters.Add("@KillmailRawId", direction: ParameterDirection.Output);
-
-            await connection.ExecuteAsync(sql, parameters);
-            
-            var killmailRawId =  parameters.Get<int>("KillmailRawId");
-            return killmailRawId;
-        }
-
-        private async Task<Killmail> InsertParsedKillmailAsync(IDbConnection connection, ParsedKillMail parsedKillmailModel) 
-        {
-            var killmailToInsert = new Killmail();
-
-            CultureInfo USCultureInfo = new CultureInfo("en-US");
-            var timezone = "America/Chicago";
-
-            // Server changed from chicago time to UTC time instead so this is not being used for now
-            //var killedAtLocalTime = DateTime.SpecifyKind(DateTime.Parse(parsedKillmailModel.killedAt, USCultureInfo), DateTimeKind.Unspecified);
-            //killedAtLocalTime.InZone(timezone);
-
-            var killedAtLocalTime = DateTime.SpecifyKind(DateTime.Parse(parsedKillmailModel.KilledAt, USCultureInfo), DateTimeKind.Utc);
-            
-            killmailToInsert.killed_at = killedAtLocalTime;
-            killmailToInsert.killmail_raw_id = parsedKillmailModel.KillMailRawId;
-            killmailToInsert.victim_guild_id = await GetOrInsertGuild(connection, parsedKillmailModel.VictimGuild);
-            killmailToInsert.attacker_guild_id = await GetOrInsertGuild(connection, parsedKillmailModel.AttackerGuild);
-            killmailToInsert.zone_id = await GetOrInsertZone(connection, parsedKillmailModel.Zone);
-            killmailToInsert.victim_id =  await GetOrInsertCharacter(connection, parsedKillmailModel.VictimName, killmailToInsert.victim_guild_id);
-            killmailToInsert.attacker_id = await GetOrInsertCharacter(connection, parsedKillmailModel.AttackerName, killmailToInsert.attacker_guild_id);
-
-            var dynamicParams = new DynamicParameters();
-            dynamicParams.AddDynamicParams(new {
-                killed_at = killmailToInsert.killed_at,
-                killmail_raw_id = killmailToInsert.killmail_raw_id,
-                victim_guild_id = killmailToInsert.victim_guild_id,
-                attacker_guild_id = killmailToInsert.attacker_guild_id,
-                zone_id = killmailToInsert.zone_id,
-                victim_id = killmailToInsert.victim_id,
-                attacker_id = killmailToInsert.attacker_id
-            });
-
-            // Finally, insert killmail 
-            var killmailInsertSql = @"INSERT INTO killmail (victim_id, victim_guild_id, attacker_id, attacker_guild_id, zone_id, killed_at, killmail_raw_id)
-                        VALUES (@victim_id, @victim_guild_id, @attacker_id, @attacker_guild_id, @zone_id, @killed_at, @killmail_raw_id)
-                        RETURNING id;
-                        ";
-
-            await connection.ExecuteAsync(killmailInsertSql, dynamicParams);
-            return killmailToInsert;
-        }
-
-
-        private async Task<int?> GetOrInsertGuild(IDbConnection connection, string name)
-        {
-            DynamicParameters parameters = new DynamicParameters();
-            
-            // First, check if victim guild name is empty and then insert query for victim guild
-            if (String.IsNullOrEmpty(name)) {
-                return null;
-            }
-            else 
-            {
-                var guildSelectQuery = @"SELECT id FROM guild WHERE name = @Name;";
-                var guild_id = await connection.ExecuteScalarAsync<int?>(guildSelectQuery, new { Name = name});
-                if (guild_id != null)
-                {
-                    return guild_id.Value;
-                }
-                
-                var victimGuildInsertSql = @"INSERT INTO guild (name) 
-                                        VALUES (@VictimGuild)
-                                        ON CONFLICT(name) DO UPDATE 
-                                        SET name = EXCLUDED.name 
-                                        RETURNING id;
-                                        ";
-
-                parameters.Add("@VictimGuild", name);
-                parameters.Add("@VictimGuildId", direction: ParameterDirection.Output);
-
-                await connection.ExecuteAsync(victimGuildInsertSql, parameters);
-                return parameters.Get<int>("VictimGuildId");
-            }            
-        }
-
-        private async Task<int> GetOrInsertZone(IDbConnection connection, string name)
-        {
-            var zoneSelectQuery = @"SELECT id FROM zone WHERE name = @Name;";
-            var zoneId = await connection.ExecuteScalarAsync<int?>(zoneSelectQuery, new { Name = name});
-            if (zoneId != null)
-            {
-                return zoneId.Value;
-            }
-
-            var parameters = new DynamicParameters();
-            var zoneInsertSql = @"INSERT INTO zone (name) 
-                        VALUES (@ZoneName)
-                        ON CONFLICT(name) DO UPDATE 
-                        SET name = EXCLUDED.name 
-                        RETURNING id;
-                        ";
-
-            parameters.Add("@ZoneName", name);
-            parameters.Add("@ZoneId", direction: ParameterDirection.Output);
-
-            await connection.ExecuteAsync(zoneInsertSql, parameters);
-            return parameters.Get<int>("ZoneId");
-        }
-
-        private async Task<int> GetOrInsertCharacter(IDbConnection connection, string name, int? guildId)
-        {
-            var parameters = new DynamicParameters();
-            
-            var charSelectQuery = @"SELECT id FROM character WHERE name = @Name;";
-            var characterId = await connection.ExecuteScalarAsync<int?>(charSelectQuery, new { Name = name});
-            if (characterId != null)
-            {
-                var charUpdateQuery = @"UPDATE character SET guild_id = @GuildId WHERE id = @Id";
-                parameters.Add("@Id", characterId.Value);
-                parameters.Add("@GuildId", guildId);
-                
-                await connection.ExecuteAsync(charUpdateQuery, parameters);
-                return characterId.Value;
-            }
-            else
-            {
-                var victimCharInsertSql = @"INSERT INTO character (name, guild_id) 
-                            VALUES (@VictimName, @GuildId)
-                            ON CONFLICT(name) DO UPDATE 
-                            SET name = EXCLUDED.name,
-                            guild_id = EXCLUDED.guild_id
-                            RETURNING id;
-                            ";
-
-                parameters.Add("@VictimName", name);
-                parameters.Add("@GuildId", guildId);
-                parameters.Add("@VictimId", direction: ParameterDirection.Output);
-
-                await connection.ExecuteAsync(victimCharInsertSql, parameters);
-                return parameters.Get<int>("VictimId");            
-            }
-        }
-
         private async Task InsertClassLevel(IDbConnection connection, CharacterModel character, Killmail insertedKillmail, IMessage message) {
 
             // Initialize variables for time testing as a base for relevance of data
