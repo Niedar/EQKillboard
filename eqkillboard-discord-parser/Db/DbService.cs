@@ -56,6 +56,84 @@ namespace EQKillboard.DiscordParser.Db
             }
         }
 
+        public async Task InsertOrUpdateClassAndLevel(CharacterModel character, Killmail killmail, bool updateKillmail)
+        {
+            var historyLengthUpdateSetting = new TimeSpan(0, 12, 0, 0);
+            var serverTime = new DateTimeOffset(DateTime.Now);
+
+            using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
+                connection.Open();
+
+                var insertLevelSql = 
+                @"UPDATE character 
+                SET level = @Level
+                WHERE name = @CharName
+                ";
+
+                await connection.ExecuteAsync(insertLevelSql, new { Level = character.level, CharName = character.name });
+
+                if (updateKillmail)
+                {
+                    string insertLevelIntoKillmailSql;
+
+                    if (character.isAttacker) 
+                    {
+                        insertLevelIntoKillmailSql = 
+                        @"UPDATE killmail 
+                        SET attacker_level = @Level
+                        WHERE killmail_raw_id = @KillmailRawId
+                        ";
+                    }
+                    else 
+                    {
+                        insertLevelIntoKillmailSql = 
+                        @"UPDATE killmail 
+                        SET victim_level = @Level
+                        WHERE killmail_raw_id = @KillmailRawId
+                        ";
+                    }
+                    await connection.ExecuteAsync(insertLevelIntoKillmailSql, new { Level = character.level, KillmailRawId = killmail.killmail_raw_id});
+                }
+
+                if (!string.IsNullOrEmpty(character.className))
+                {
+                    var classSelectQuery = @"SELECT id FROM class WHERE name = @Name;";
+                    var classId = await connection.ExecuteScalarAsync<int?>(classSelectQuery, new { Name = character.className});
+                    if (classId != null)
+                    {
+                        character.classId = classId.Value;
+                    }
+                    else
+                    {
+                        // Update class table with class_id
+                        var insertClassSql = 
+                        @"INSERT INTO class (name) 
+                        VALUES (@ClassName)
+                        ON CONFLICT(name) DO UPDATE
+                        SET name = EXCLUDED.name
+                        RETURNING id
+                        ";
+
+                        var parameters = new DynamicParameters();
+                        parameters.Add("@ClassName", character.className);
+                        parameters.Add("@ClassId", direction: ParameterDirection.Output);
+
+                        await connection.ExecuteAsync(insertClassSql, parameters);
+                        character.classId = parameters.Get<int>("ClassId");
+                    }
+                }
+
+                // Update character table with class_id
+                var insertClassIntoCharSql = 
+                @"UPDATE character 
+                SET class_id = @ClassId
+                WHERE name = @CharName
+                ";
+                
+                await connection.ExecuteAsync(insertClassIntoCharSql, new { ClassId = character.classId, CharName = character.name });
+            }
+        }
+
         private async Task<RawKillMail> InsertRawKillmailAsync(IDbConnection connection, IMessage discordMessage)
         {
             Console.WriteLine(discordMessage.Content.ToString());

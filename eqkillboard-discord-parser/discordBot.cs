@@ -123,7 +123,6 @@ namespace EQKillboard.DiscordParser
         private async Task ProcessMessage(IMessage message)
         {
             YellowTextParser killmailParser = new YellowTextParser();
-            var rawKillMailId = 0;
             ParsedKillMail parsedKillmail = null;
             
             parsedKillmail = killmailParser.ExtractKillmail(message.Content);
@@ -165,12 +164,7 @@ namespace EQKillboard.DiscordParser
             }
         }
  
-        private async Task InsertClassLevel(IDbConnection connection, CharacterModel character, Killmail insertedKillmail, IMessage message) {
-
-            // Initialize variables for time testing as a base for relevance of data
-            var historyLengthUpdateSetting = new TimeSpan(0, 12, 0, 0);
-            var serverTime = new DateTimeOffset(DateTime.Now);
-            
+        private async Task InsertClassLevel(IDbConnection connection, CharacterModel character, Killmail insertedKillmail, IMessage message) {            
             var levelString = CharBrowserParser.ParseLevel(character.classLevel);
             if (!string.IsNullOrEmpty(levelString))
             {
@@ -178,88 +172,12 @@ namespace EQKillboard.DiscordParser
             }
             character.className = CharBrowserParser.ParseChar(character.classLevel);
 
-            // Update character level and killmail character level if not older than historyLengthUpdateSetting
-            var insertLevelSql = @"UPDATE character 
-                    SET level = @Level
-                    WHERE name = @CharName
-                    ";
-
-            try {
-                await connection.ExecuteAsync(insertLevelSql, new { Level = character.level, CharName = character.name });
-            }
-            catch (Exception ex) {
-                Console.WriteLine(ex);
-            }
-
-            if(serverTime - message.CreatedAt < historyLengthUpdateSetting) {
-                string insertLevelIntoKillmailSql;
-
-                if (character.isAttacker) {
-                    insertLevelIntoKillmailSql = @"UPDATE killmail 
-                                        SET attacker_level = @Level
-                                        WHERE killmail_raw_id = @KillmailRawId
-                                        ";
-                }
-                else {
-                    insertLevelIntoKillmailSql = @"UPDATE killmail 
-                                        SET victim_level = @Level
-                                        WHERE killmail_raw_id = @KillmailRawId
-                                        ";
-                }
-
-                try {
-                    await connection.ExecuteAsync(insertLevelIntoKillmailSql, new { Level = character.level, KillmailRawId = insertedKillmail.killmail_raw_id});
-                }
-                catch (Exception ex) {
-                    Console.WriteLine(ex);
-                }
-            }
-
-            if (!string.IsNullOrEmpty(character.className))
-            {
-                var classSelectQuery = @"SELECT id FROM class WHERE name = @Name;";
-                var classId = await connection.ExecuteScalarAsync<int?>(classSelectQuery, new { Name = character.className});
-                if (classId != null)
-                {
-                    character.classId = classId.Value;
-                }
-                else
-                {
-                    // Update class table with class_id
-                    var insertClassSql = @"INSERT INTO class (name) 
-                                        VALUES (@ClassName)
-                                        ON CONFLICT(name) DO UPDATE
-                                        SET name = EXCLUDED.name
-                                        RETURNING id
-                                        ";
-
-                    var parameters = new DynamicParameters();
-                    parameters.Add("@ClassName", character.className);
-                    parameters.Add("@ClassId", direction: ParameterDirection.Output);
-
-                    try {
-                        await connection.ExecuteAsync(insertClassSql, parameters);
-                    }
-                    catch (Exception ex) {
-                        Console.WriteLine(ex);
-                    }
-
-                    character.classId = parameters.Get<int>("ClassId");
-                }
-            }
-
-            // Update character table with class_id
-            var insertClassIntoCharSql = @"UPDATE character 
-                                    SET class_id = @ClassId
-                                    WHERE name = @CharName
-                                    ";
-
-            try {
-                await connection.ExecuteAsync(insertClassIntoCharSql, new { ClassId = character.classId, CharName = character.name });
-            }
-            catch (Exception ex) {
-                Console.WriteLine(ex);
-            }
+            // Initialize variables for time testing as a base for relevance of data
+            var historyLengthUpdateSetting = new TimeSpan(0, 12, 0, 0);
+            var serverTime = new DateTimeOffset(DateTime.Now);
+            var shouldUpdateKillmail = serverTime - message.CreatedAt < historyLengthUpdateSetting;
+            
+            await dbService.InsertOrUpdateClassAndLevel(character, insertedKillmail, shouldUpdateKillmail);
 
         }
     }
