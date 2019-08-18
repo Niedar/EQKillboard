@@ -196,7 +196,7 @@ namespace EQKillboard.DiscordParser.Db
             ";
 
             await connection.ExecuteAsync(killmailInsertSql, dynamicParams);
-            killmailToInsert.id = dynamicParams.Get<int>("@KillMailId");
+            killmailToInsert.id = dynamicParams.Get<int>("KillMailId");
             return killmailToInsert;
         }
 
