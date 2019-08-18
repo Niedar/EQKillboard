@@ -41,6 +41,10 @@ namespace EQKillboard.DiscordParser.Db
                         parsedKillMail.KillMailRawId = rawKillMail.id;
 
                         var insertedKillmail = await InsertParsedKillmailAsync(connection, parsedKillMail);
+                        foreach(var involved in parsedKillMail.Involved)
+                        {
+                            await InsertParsedKillMailInvolved(connection, insertedKillmail, involved);
+                        }
 
                         killmailTransaction.Commit();
 
@@ -129,7 +133,7 @@ namespace EQKillboard.DiscordParser.Db
                 SET class_id = @ClassId
                 WHERE name = @CharName
                 ";
-                
+
                 await connection.ExecuteAsync(insertClassIntoCharSql, new { ClassId = character.classId, CharName = character.name });
             }
         }
@@ -182,15 +186,38 @@ namespace EQKillboard.DiscordParser.Db
                 victim_id = killmailToInsert.victim_id,
                 attacker_id = killmailToInsert.attacker_id
             });
+            dynamicParams.Add("@KillMailId", direction: ParameterDirection.Output);
 
             // Finally, insert killmail 
-            var killmailInsertSql = @"INSERT INTO killmail (victim_id, victim_guild_id, attacker_id, attacker_guild_id, zone_id, killed_at, killmail_raw_id)
-                        VALUES (@victim_id, @victim_guild_id, @attacker_id, @attacker_guild_id, @zone_id, @killed_at, @killmail_raw_id)
-                        RETURNING id;
-                        ";
+            var killmailInsertSql = 
+            @"INSERT INTO killmail (victim_id, victim_guild_id, attacker_id, attacker_guild_id, zone_id, killed_at, killmail_raw_id)
+            VALUES (@victim_id, @victim_guild_id, @attacker_id, @attacker_guild_id, @zone_id, @killed_at, @killmail_raw_id)
+            RETURNING id;
+            ";
 
             await connection.ExecuteAsync(killmailInsertSql, dynamicParams);
+            killmailToInsert.id = dynamicParams.Get<int>("@KillMailId");
             return killmailToInsert;
+        }
+
+        private async Task InsertParsedKillMailInvolved(IDbConnection connection, Killmail killMail, ParsedKillMailInvolved involved)
+        {
+            var killMailInvolvedToInsert = new KillmailInvolved();
+            killMailInvolvedToInsert.killmail_id = killMail.id;
+            killMailInvolvedToInsert.attacker_guild_id = await GetOrInsertGuild(connection, involved.AttackerGuild);
+            killMailInvolvedToInsert.attacker_level = involved.AttackerLevel;
+            killMailInvolvedToInsert.attacker_id = await GetOrInsertCharacter(connection, involved.AttackerName, killMailInvolvedToInsert.attacker_guild_id);
+            killMailInvolvedToInsert.melee_damage = involved.MeleeDamage;
+            killMailInvolvedToInsert.melee_hits = involved.MeleeHits;
+            killMailInvolvedToInsert.spell_damage = involved.SpellDamage;
+            killMailInvolvedToInsert.spell_hits = involved.SpellHits;
+
+            var insertQuery = 
+            @"INSERT INTO killmail_involved (killmail_id, attacker_id, attacker_guild_id, attacker_level, melee_damage, melee_hits, spell_damage, spell_hits)
+            VALUES (@killmail_id, @attacker_id, @attacker_guild_id, @attacker_level, @melee_damage, @melee_hits, @spell_damage, @spell_hits)
+            ";
+
+            await connection.ExecuteAsync(insertQuery, killMailInvolvedToInsert);
         }
 
 

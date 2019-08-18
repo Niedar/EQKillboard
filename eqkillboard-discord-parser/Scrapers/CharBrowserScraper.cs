@@ -6,32 +6,31 @@ using AngleSharp;
 
 namespace EQKillboard.DiscordParser.Scrapers {
     public class CharBrowserScraper {
-    private IConfiguration config { get; set; }
-    public string charBrowserUrl { get; set; }
+        private IConfiguration config { get; set; }
+        public string charBrowserUrl { get; set; }
 
-    public CharBrowserScraper() {
-        config = Configuration.Default.WithDefaultLoader();
-        charBrowserUrl = "https://riseofzek.com/charbrowser/index.php?page=character&char=";
-    }
-
-    public async Task<string> ScrapeCharInfo(string charName) {
-        var address = charBrowserUrl + charName;
-        var document = await BrowsingContext.New(config).OpenAsync(address);
-        var cellSelector = "div.InventoryStats table tbody tr:nth-child(5)";
-        var cells = document.QuerySelector(cellSelector);
-        
-        string classLevel = string.Empty;
-        if (cells != null)
-        {
-            classLevel = cells.TextContent;
+        public CharBrowserScraper() {
+            config = Configuration.Default.WithDefaultLoader();
+            charBrowserUrl = "https://riseofzek.com/charbrowser/index.php?page=character&char=";
         }
-         //Select(m => m.TextContent).FirstOrDefault();
 
-        //var classLevel = 
-        // Remove deity from retrieved string!!
+        public async Task<string> ScrapeCharInfo(string charName) {
+            var address = charBrowserUrl + charName;
+            var document = await BrowsingContext.New(config).OpenAsync(address);
+            var cellSelector = "div.InventoryStats table tbody tr:nth-child(5)";
+            var cells = document.QuerySelector(cellSelector);
+            
+            string classLevel = string.Empty;
+            if (cells != null)
+            {
+                classLevel = cells.TextContent;
+            }
+            //Select(m => m.TextContent).FirstOrDefault();
 
-        return classLevel;
-    }
+            //var classLevel = 
+            // Remove deity from retrieved string!!
 
+            return classLevel;
+        }
     }
 }

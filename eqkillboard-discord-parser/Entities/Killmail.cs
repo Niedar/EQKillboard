@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace EQKillboard.DiscordParser.Entities {
     public class Killmail {
+        public int id { get; set;}
         public int victim_id { get; set; }
         public int? victim_guild_id { get; set; }
         public int victim_level { get; set; }

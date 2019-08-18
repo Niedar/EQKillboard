@@ -15,6 +15,8 @@ namespace EQKillboard.DiscordParser.Models {
 
     public class ParsedKillMailInvolved {
         public string AttackerName { get; set; }
+        public string AttackerGuild { get; set;}
+        public int? AttackerLevel { get; set; }
         public int? MeleeDamage { get; set; }
         public int? MeleeHits { get; set; }
         public int? SpellDamage { get; set; }
