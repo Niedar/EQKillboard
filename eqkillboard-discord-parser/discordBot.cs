@@ -122,45 +122,52 @@ namespace EQKillboard.DiscordParser
 
         private async Task ProcessMessage(IMessage message)
         {
-            YellowTextParser killmailParser = new YellowTextParser();
-            ParsedKillMail parsedKillmail = null;
-            
-            parsedKillmail = killmailParser.ExtractKillmail(message.Content);
-
-            if (parsedKillmail != null)
+            try
             {
-                var existingRawKillMail = await dbService.GetRawKillMailAsync(message.Id);
-                if (existingRawKillMail != null)
+                YellowTextParser killmailParser = new YellowTextParser();
+                ParsedKillMail parsedKillmail = null;
+                
+                parsedKillmail = killmailParser.ExtractKillmail(message.Content);
+
+                if (parsedKillmail != null)
                 {
-                    return;
-                }
-
-                var insertedKillmail = await dbService.InsertRawAndParsedKillMailAsync(message, parsedKillmail);
-
-                // Get level and class for each char
-                var scraper = new CharBrowserScraper();
-                var victim = new CharacterModel{
-                    name = parsedKillmail.VictimName,
-                    isAttacker = false
-                };
-                var attacker = new CharacterModel{
-                    name = parsedKillmail.AttackerName,
-                    isAttacker = true
-                };
-
-                victim.classLevel = await scraper.ScrapeCharInfo(victim.name);
-                attacker.classLevel = await scraper.ScrapeCharInfo(attacker.name); 
-
-                using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
-                    if (!string.IsNullOrEmpty(victim.classLevel))
+                    var existingRawKillMail = await dbService.GetRawKillMailAsync(message.Id);
+                    if (existingRawKillMail != null)
                     {
-                        await InsertClassLevel(connection, victim, insertedKillmail, message);
+                        return;
                     }
-                    if (!string.IsNullOrEmpty(attacker.classLevel))
-                    {
-                        await InsertClassLevel(connection, attacker, insertedKillmail, message);  
-                    } 
+
+                    var insertedKillmail = await dbService.InsertRawAndParsedKillMailAsync(message, parsedKillmail);
+
+                    // Get level and class for each char
+                    var scraper = new CharBrowserScraper();
+                    var victim = new CharacterModel{
+                        name = parsedKillmail.VictimName,
+                        isAttacker = false
+                    };
+                    var attacker = new CharacterModel{
+                        name = parsedKillmail.AttackerName,
+                        isAttacker = true
+                    };
+
+                    victim.classLevel = await scraper.ScrapeCharInfo(victim.name);
+                    attacker.classLevel = await scraper.ScrapeCharInfo(attacker.name); 
+
+                    using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
+                        if (!string.IsNullOrEmpty(victim.classLevel))
+                        {
+                            await InsertClassLevel(connection, victim, insertedKillmail, message);
+                        }
+                        if (!string.IsNullOrEmpty(attacker.classLevel))
+                        {
+                            await InsertClassLevel(connection, attacker, insertedKillmail, message);  
+                        } 
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
             }
         }
  

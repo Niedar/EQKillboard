@@ -146,10 +146,11 @@ namespace EQKillboard.DiscordParser.Db
             var sql = @"INSERT INTO killmail_raw (discord_message_id, message) Values (@MessageId, @Message)
             ON CONFLICT (discord_message_id) DO UPDATE
             SET message = EXCLUDED.message
-            RETURNING id, discord_message_id, message, status
+            RETURNING id, discord_message_id, message, status_type_id
             "; // insert raw killmail
 
-            parameters.Add("@MessageId", discordMessage.Id);
+            decimal messageId = discordMessage.Id;
+            parameters.Add("@MessageId", messageId);
             parameters.Add("@Message", discordMessage.Content);
 
             return await connection.QueryFirstAsync<RawKillMail>(sql, parameters);
@@ -311,7 +312,7 @@ namespace EQKillboard.DiscordParser.Db
             }
         }
 
-        public async Task<RawKillMail> GetRawKillMailAsync(ulong discordMessageId)
+        public async Task<RawKillMail> GetRawKillMailAsync(decimal discordMessageId)
         {
             using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
                 const string selectRawKillmailSql = @"
@@ -319,7 +320,7 @@ namespace EQKillboard.DiscordParser.Db
                     id,
                     discord_message_id,
                     message,
-                    status
+                    status_type_id
                 FROM killmail_raw 
                 WHERE discord_message_id = @messageId";
                 return await connection.QueryFirstOrDefaultAsync<RawKillMail>(selectRawKillmailSql, new { messageId = discordMessageId });
