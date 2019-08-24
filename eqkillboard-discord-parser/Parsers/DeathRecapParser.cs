@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using EQKillboard.DiscordParser.Models;
+using System.Linq;
 
 namespace EQKillboard.DiscordParser.Parsers {
     public static class DeathRecapParser {
@@ -11,19 +12,26 @@ namespace EQKillboard.DiscordParser.Parsers {
                                                 + @"\s(?<zone>.*)"
                                                 + @"\s*Killing blow:"
                                                 + @"\s(?<killingBlow>.*)"
-                                                + @"\s*Overdamage"
+                                                + @"\s*Overdamage:"
                                                 + @"\s(?<overDamage>.*)"
                                                 + @"\s*(?<involvedText>(?:.|\n)*)";
-
         
         private const string InvolvedPattern = @"(?<attacker>.*)\s*contributed\s*(?:(?<meleeDamage1>\d*) melee damage across (?<meleehit1>\d*) hits?|(?<spellDamage1>\d*) spell damage across (?<spellHit1>\d*) hits?)(?: and\s*(?:(?<meleeDamage2>\d*) melee damage across (?<meleeHit2>\d*) hit?s|(?<spellDamage2>\d*) spell damage across (?<spellHit2>\d*) hit?s)|\.)";
                                                         
         public static ParsedKillMail ParseKillmail(string input) {
+            // Remove special formatting
+            var lines = input.Split(new [] { '\r', '\n' });
+            if (lines.Any() && lines.FirstOrDefault().Contains("```"))
+            {
+                input = string.Join("\n", lines.Skip(1));
+            }
+            input = input.Replace("**", "");
+
             var extractedKillmail = new ParsedKillMail();
             Match killmailMatch = Regex.Match(input, Pattern);
             if (killmailMatch.Success)
             {
-                foreach (Group group in killmailMatch.Groups) {
+                foreach (Group group in killmailMatch.Groups.Where(x => x.Success)) {
                     switch(group.Name)
                     {
                         case "datetime":
@@ -47,7 +55,8 @@ namespace EQKillboard.DiscordParser.Parsers {
                                 extractedKillmail.OverDamage = overDamage;
                             break;
                         case "involvedText":
-
+                            ParseInvolved(extractedKillmail, group.Value);
+                            break;
                         default:
                             break;
                     }
@@ -70,10 +79,10 @@ namespace EQKillboard.DiscordParser.Parsers {
                 if (involvedMatch.Success)
                 {
                     var parsedInvolved = new ParsedKillMailInvolved();
-                    foreach (Group group in involvedMatch.Groups) {
+                    foreach (Group group in involvedMatch.Groups.Where(x => x.Success)) {
                         switch(group.Name)
                         {
-                            case "attackerName":
+                            case "attacker":
                                 parsedInvolved.AttackerName = group.Value.Trim();
                                 break;
                             case "meleeDamage1":
