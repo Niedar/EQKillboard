@@ -41,3 +41,21 @@ sudo npm install postgraphile-plugin-connection-filter -g
 postgraphile --append-plugins postgraphile-plugin-connection-filter -c postgres://user:password@localhost/database_name \
 --schema public
 ```
+
+
+## Settings
+
+```
+{
+    "ConnectionStrings": {
+        "DefaultConnection": "Host=localhost;Port=5432;Database=EQKillboardDatabase;Username=eqkillboard;Password=password"
+    },
+    "Tokens": {
+        "userToken": "Discord User Token"
+    },
+    "Settings": {
+        "HistoryLengthInDays": "20"
+    }
+}
+
+```
