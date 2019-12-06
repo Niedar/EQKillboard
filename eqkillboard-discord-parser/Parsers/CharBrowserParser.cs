@@ -4,7 +4,7 @@ public static class CharBrowserParser
 {
         private const string ClassLevelPattern = @"(?<level>\d*)"
                                                 + @"\s"
-                                                + @"(?<charName>\w*)"
+                                                + @"(?<className>\w*)"
                                                 + @"[A-Z]";
         public static string ParseLevel(string classLevel) {
             string level = "";
@@ -17,15 +17,15 @@ public static class CharBrowserParser
 
             return level;
         }
-        public static string ParseChar(string classLevel) {
-            string charName = "";
+        public static string ParseClass(string classLevel) {
+            string className = "";
             Match classLevelMatch = Regex.Match(classLevel, ClassLevelPattern);
             foreach(Group group in classLevelMatch.Groups) {
-                if (group.Name == "charName") {
-                    charName = group.Value;
+                if (group.Name == "className") {
+                    className = group.Value;
                 }
             }
 
-            return charName;
+            return className;
         }
 }

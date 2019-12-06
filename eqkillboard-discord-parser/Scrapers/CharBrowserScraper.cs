@@ -6,17 +6,23 @@ using AngleSharp;
 
 namespace EQKillboard.DiscordParser.Scrapers {
     public class CharBrowserScraper {
-        private IConfiguration config { get; set; }
-        private const string charBrowserUrl = "https://riseofzek.com/charbrowser/index.php?page=character&char=";
-        private const string npcSearchUrl = "https://riseofzek.com/test/?a=advanced_npcs&isearch=Search&iname=";
+        private const string _charBrowserUrl = "https://riseofzek.com/charbrowser/index.php?page=character&char=";
+        private const string _npcSearchUrl = "https://riseofzek.com/alla/?a=advanced_npcs&isearch=Search&iname=";
+        private IConfiguration _config;
+        private string _characterName;
+        private string _classLevelResult;
+        private bool _isNpc;
+        private bool _success;
 
-        public CharBrowserScraper() {
-            config = Configuration.Default.WithDefaultLoader();
+        public CharBrowserScraper(string characterName) {
+            _characterName = characterName;
+            _config = Configuration.Default.WithDefaultLoader();
         }
 
-        public async Task<string> ScrapeCharInfo(string charName) {
-            var address = charBrowserUrl + charName;
-            var document = await BrowsingContext.New(config).OpenAsync(address);
+        public async Task Fetch() 
+        {
+            var address = _charBrowserUrl + _characterName;
+            var document = await BrowsingContext.New(_config).OpenAsync(address);
             var cellSelector = "div.InventoryStats table tbody tr:nth-child(5)";
             var cells = document.QuerySelector(cellSelector);
             
@@ -25,22 +31,49 @@ namespace EQKillboard.DiscordParser.Scrapers {
             {
                 classLevel = cells.TextContent;
             }
-            //Select(m => m.TextContent).FirstOrDefault();
+            _classLevelResult = classLevel;
 
-            //var classLevel = 
-            // Remove deity from retrieved string!!
+            address = _npcSearchUrl + _characterName;
+            document = await BrowsingContext.New(_config).OpenAsync(address);
+            cellSelector = "div.page-content-ajax li a";
+            var cellsAll = document.QuerySelectorAll(cellSelector);
+            _isNpc = cellsAll.Any(x => x.TextContent.Equals(_characterName, StringComparison.InvariantCultureIgnoreCase));
 
-            return classLevel;
+            _success = true;
         }
 
-        public async Task<bool> ScrapeIsNpc(string charName)
+        public int? Level
         {
-            var address = npcSearchUrl + charName;
-            var document = await BrowsingContext.New(config).OpenAsync(address);
-            var cellSelector = "div.page-content-ajax li a";
-            var cells = document.QuerySelectorAll(cellSelector);
+            get
+            {
+                if (!string.IsNullOrEmpty(CharBrowserParser.ParseLevel(_classLevelResult)))
+                {
+                    return Convert.ToInt32(CharBrowserParser.ParseLevel(_classLevelResult));
+                }
+                return null;
+            }
+        }
+        public string Class
+        {
+            get
+            {
+                return CharBrowserParser.ParseClass(_classLevelResult);
+            }
+        }
+        public bool IsNpc
+        {
+            get
+            {
+                return _isNpc;
+            }
+        }
 
-            return cells.Any(x => x.TextContent.Equals(charName, StringComparison.InvariantCultureIgnoreCase));
+        public bool Success
+        {
+            get
+            {
+                return _success;
+            }
         }
     }
 }

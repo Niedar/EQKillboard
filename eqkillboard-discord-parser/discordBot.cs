@@ -89,7 +89,7 @@ namespace EQKillboard.DiscordParser
             var serverTime = new DateTimeOffset(DateTime.Now);
 
             var killmailGuild = client.Guilds.FirstOrDefault(x => x.Name == "Rise of Zek");
-            var killmailChannel = killmailGuild.TextChannels.FirstOrDefault(x => x.Name.IndexOf("yellowtext", StringComparison.OrdinalIgnoreCase) >= 0);
+            var killmailChannel = killmailGuild.TextChannels.FirstOrDefault(x => x.Name.IndexOf("death_recap", StringComparison.OrdinalIgnoreCase) >= 0);
 
             // Retrieve first message
             if(killmailChannel != null) {
@@ -124,13 +124,12 @@ namespace EQKillboard.DiscordParser
         {
             try
             {
-                YellowTextParser killmailParser = new YellowTextParser();
                 ParsedKillMail parsedKillmail = null;
                 
-                parsedKillmail = killmailParser.ExtractKillmail(message.Content);
-
+                parsedKillmail = DeathRecapParser.ParseKillmail(message.Content);
                 if (parsedKillmail != null)
                 {
+                    
                     var existingRawKillMail = await dbService.GetRawKillMailAsync(message.Id);
                     if (existingRawKillMail != null)
                     {
@@ -140,26 +139,30 @@ namespace EQKillboard.DiscordParser
                     var insertedKillmail = await dbService.InsertRawAndParsedKillMailAsync(message, parsedKillmail);
 
                     // Get level and class for each char
-                    var scraper = new CharBrowserScraper();
-                    var victim = new CharacterModel{
-                        name = parsedKillmail.VictimName,
-                        isAttacker = false
-                    };
-                    var attacker = new CharacterModel{
-                        name = parsedKillmail.AttackerName,
-                        isAttacker = true
-                    };
-
-                    victim.classLevel = await scraper.ScrapeCharInfo(victim.name);
-                    attacker.classLevel = await scraper.ScrapeCharInfo(attacker.name); 
+                    var victimScraper = new CharBrowserScraper(parsedKillmail.VictimName);
+                    var attackerScraper = new CharBrowserScraper(parsedKillmail.AttackerName);
+                    await victimScraper.Fetch();
+                    await attackerScraper.Fetch();
 
                     using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
-                        if (!string.IsNullOrEmpty(victim.classLevel))
+                        if (victimScraper.Success)
                         {
+                            var victim = new CharacterModel{
+                                name = parsedKillmail.VictimName,
+                                isAttacker = false,
+                                className = victimScraper.Class,
+                                level = victimScraper.Level
+                            };
                             await InsertClassLevel(connection, victim, insertedKillmail, message);
                         }
-                        if (!string.IsNullOrEmpty(attacker.classLevel))
+                        if (attackerScraper.Success)
                         {
+                            var attacker = new CharacterModel{
+                                name = parsedKillmail.AttackerName,
+                                isAttacker = true,
+                                className = attackerScraper.Class,
+                                level = attackerScraper.Level
+                            };
                             await InsertClassLevel(connection, attacker, insertedKillmail, message);  
                         } 
                     }
@@ -172,13 +175,6 @@ namespace EQKillboard.DiscordParser
         }
  
         private async Task InsertClassLevel(IDbConnection connection, CharacterModel character, Killmail insertedKillmail, IMessage message) {            
-            var levelString = CharBrowserParser.ParseLevel(character.classLevel);
-            if (!string.IsNullOrEmpty(levelString))
-            {
-                character.level = Convert.ToInt32(levelString);
-            }
-            character.className = CharBrowserParser.ParseChar(character.classLevel);
-
             // Initialize variables for time testing as a base for relevance of data
             var historyLengthUpdateSetting = new TimeSpan(0, 12, 0, 0);
             var serverTime = new DateTimeOffset(DateTime.Now);

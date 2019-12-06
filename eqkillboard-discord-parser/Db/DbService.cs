@@ -31,9 +31,7 @@ namespace EQKillboard.DiscordParser.Db
         public async Task<Killmail> InsertRawAndParsedKillMailAsync(IMessage discordMessage, ParsedKillMail parsedKillMail)
         {
             using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
-
                 connection.Open();
-
                 using (var killmailTransaction = connection.BeginTransaction()) {
                     try
                     {
@@ -43,7 +41,7 @@ namespace EQKillboard.DiscordParser.Db
                         var insertedKillmail = await InsertParsedKillmailAsync(connection, parsedKillMail);
                         foreach(var involved in parsedKillMail.Involved)
                         {
-                            await InsertParsedKillMailInvolved(connection, insertedKillmail, involved);
+                            insertedKillmail.Involved.Add(await InsertParsedKillMailInvolved(connection, insertedKillmail, involved));
                         }
 
                         killmailTransaction.Commit();
@@ -62,9 +60,6 @@ namespace EQKillboard.DiscordParser.Db
 
         public async Task InsertOrUpdateClassAndLevel(CharacterModel character, Killmail killmail, bool updateKillmail)
         {
-            var historyLengthUpdateSetting = new TimeSpan(0, 12, 0, 0);
-            var serverTime = new DateTimeOffset(DateTime.Now);
-
             using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
                 connection.Open();
 
@@ -201,7 +196,7 @@ namespace EQKillboard.DiscordParser.Db
             return killmailToInsert;
         }
 
-        private async Task InsertParsedKillMailInvolved(IDbConnection connection, Killmail killMail, ParsedKillMailInvolved involved)
+        private async Task<KillmailInvolved> InsertParsedKillMailInvolved(IDbConnection connection, Killmail killMail, ParsedKillMailInvolved involved)
         {
             var killMailInvolvedToInsert = new KillmailInvolved();
             killMailInvolvedToInsert.killmail_id = killMail.id;
@@ -219,6 +214,8 @@ namespace EQKillboard.DiscordParser.Db
             ";
 
             await connection.ExecuteAsync(insertQuery, killMailInvolvedToInsert);
+
+            return killMailInvolvedToInsert;
         }
 
 

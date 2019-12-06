@@ -4,7 +4,6 @@ namespace EQKillboard.DiscordParser.Models {
         public int? classId { get; set; }
         public string className { get; set; }
         public int? level { get; set; }
-        public string classLevel { get; set; }
         public bool isAttacker { get; set; }
     }
 }
