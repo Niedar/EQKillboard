@@ -4,7 +4,8 @@
 BEGIN;
 
 CREATE TABLE killmail_involved (
-    killmail_id INTEGER PRIMARY KEY REFERENCES killmail NOT NULL,
+    id SERIAL PRIMARY KEY,
+    killmail_id INTEGER REFERENCES killmail NOT NULL,
     attacker_id INTEGER REFERENCES character NOT NULL,
     attacker_guild_id INTEGER REFERENCES guild,
     attacker_level INTEGER,

@@ -126,7 +126,7 @@ namespace EQKillboard.DiscordParser
             {
                 ParsedKillMail parsedKillmail = null;
                 
-                parsedKillmail = DeathRecapParser.ParseKillmail(message.Content);
+                parsedKillmail = await DeathRecapParser.ParseKillmail(message.Content);
                 if (parsedKillmail != null)
                 {
                     
@@ -137,51 +137,12 @@ namespace EQKillboard.DiscordParser
                     }
 
                     var insertedKillmail = await dbService.InsertRawAndParsedKillMailAsync(message, parsedKillmail);
-
-                    // Get level and class for each char
-                    var victimScraper = new CharBrowserScraper(parsedKillmail.VictimName);
-                    var attackerScraper = new CharBrowserScraper(parsedKillmail.AttackerName);
-                    await victimScraper.Fetch();
-                    await attackerScraper.Fetch();
-
-                    using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
-                        if (victimScraper.Success)
-                        {
-                            var victim = new CharacterModel{
-                                name = parsedKillmail.VictimName,
-                                isAttacker = false,
-                                className = victimScraper.Class,
-                                level = victimScraper.Level
-                            };
-                            await InsertClassLevel(connection, victim, insertedKillmail, message);
-                        }
-                        if (attackerScraper.Success)
-                        {
-                            var attacker = new CharacterModel{
-                                name = parsedKillmail.AttackerName,
-                                isAttacker = true,
-                                className = attackerScraper.Class,
-                                level = attackerScraper.Level
-                            };
-                            await InsertClassLevel(connection, attacker, insertedKillmail, message);  
-                        } 
-                    }
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
             }
-        }
- 
-        private async Task InsertClassLevel(IDbConnection connection, CharacterModel character, Killmail insertedKillmail, IMessage message) {            
-            // Initialize variables for time testing as a base for relevance of data
-            var historyLengthUpdateSetting = new TimeSpan(0, 12, 0, 0);
-            var serverTime = new DateTimeOffset(DateTime.Now);
-            var shouldUpdateKillmail = serverTime - message.CreatedAt < historyLengthUpdateSetting;
-            
-            await dbService.InsertOrUpdateClassAndLevel(character, insertedKillmail, shouldUpdateKillmail);
-
         }
     }
 }

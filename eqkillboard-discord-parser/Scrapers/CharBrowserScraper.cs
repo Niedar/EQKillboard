@@ -6,7 +6,7 @@ using AngleSharp;
 
 namespace EQKillboard.DiscordParser.Scrapers {
     public class CharBrowserScraper {
-        private const string _charBrowserUrl = "https://riseofzek.com/charbrowser/index.php?page=character&char=";
+        private const string _charBrowserUrl = "https://riseofzek.com/charbrowser/index.php?page=search&name=";
         private const string _npcSearchUrl = "https://riseofzek.com/alla/?a=advanced_npcs&isearch=Search&iname=";
         private IConfiguration _config;
         private string _characterName;
@@ -23,15 +23,37 @@ namespace EQKillboard.DiscordParser.Scrapers {
         {
             var address = _charBrowserUrl + _characterName;
             var document = await BrowsingContext.New(_config).OpenAsync(address);
-            var cellSelector = "div.InventoryStats table tbody tr:nth-child(5)";
-            var cells = document.QuerySelector(cellSelector);
+            var cellSelector = "table.StatTable tbody";
+            var tableBody = document.QuerySelector(cellSelector);
             
             string classLevel = string.Empty;
-            if (cells != null)
+            if (tableBody != null)
             {
-                classLevel = cells.TextContent;
+                // Loop over each row in the table looking at the first column to find an exact match on character name
+                foreach (var tableRow in tableBody.Children.Where(x => x.LocalName == "tr"))
+                {
+                    var firstColumn = tableRow.Children.FirstOrDefault(x => x.LocalName == "td");
+                    if (firstColumn != null && firstColumn.TextContent.Equals(_characterName, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        var guildColumn = tableRow.Children.Where(x => x.LocalName == "td").Skip(1).FirstOrDefault();
+                        var levelColumn = tableRow.Children.Where(x => x.LocalName == "td").Skip(2).FirstOrDefault();
+                        var classColumn = tableRow.Children.Where(x => x.LocalName == "td").Skip(3).FirstOrDefault();
+
+                        if (guildColumn != null && !string.IsNullOrEmpty(guildColumn.TextContent))
+                        {
+                            Guild = guildColumn.TextContent.Replace("<", "").Replace(">", "");
+                        }
+                        if (levelColumn != null && !string.IsNullOrEmpty(levelColumn.TextContent))
+                        {
+                            Level = Convert.ToInt32(levelColumn.TextContent);
+                        }
+                        if (classColumn != null && !string.IsNullOrEmpty(classColumn.TextContent))
+                        {
+                            Class = classColumn.TextContent;
+                        }
+                    }
+                }
             }
-            _classLevelResult = classLevel;
 
             address = _npcSearchUrl + _characterName;
             document = await BrowsingContext.New(_config).OpenAsync(address);
@@ -42,24 +64,10 @@ namespace EQKillboard.DiscordParser.Scrapers {
             _success = true;
         }
 
-        public int? Level
-        {
-            get
-            {
-                if (!string.IsNullOrEmpty(CharBrowserParser.ParseLevel(_classLevelResult)))
-                {
-                    return Convert.ToInt32(CharBrowserParser.ParseLevel(_classLevelResult));
-                }
-                return null;
-            }
-        }
-        public string Class
-        {
-            get
-            {
-                return CharBrowserParser.ParseClass(_classLevelResult);
-            }
-        }
+        public string Class { get; private set; }
+        public int? Level { get; private set; }
+        public string Guild { get; private set; }
+
         public bool IsNpc
         {
             get

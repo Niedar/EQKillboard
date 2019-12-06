@@ -1,6 +1,8 @@
 using System.Text.RegularExpressions;
 using EQKillboard.DiscordParser.Models;
 using System.Linq;
+using EQKillboard.DiscordParser.Scrapers;
+using System.Threading.Tasks;
 
 namespace EQKillboard.DiscordParser.Parsers {
     public static class DeathRecapParser {
@@ -18,7 +20,7 @@ namespace EQKillboard.DiscordParser.Parsers {
         
         private const string InvolvedPattern = @"(?<attacker>.*)\s*contributed\s*(?:(?<meleeDamage1>\d*) melee damage across (?<meleehit1>\d*) hits?|(?<spellDamage1>\d*) spell damage across (?<spellHit1>\d*) hits?)(?: and\s*(?:(?<meleeDamage2>\d*) melee damage across (?<meleeHit2>\d*) hit?s|(?<spellDamage2>\d*) spell damage across (?<spellHit2>\d*) hit?s)|\.)";
                                                         
-        public static ParsedKillMail ParseKillmail(string input) {
+        public static async Task<ParsedKillMail> ParseKillmail(string input) {
             // Remove special formatting
             var lines = input.Split(new [] { '\r', '\n' });
             if (lines.Any() && lines.FirstOrDefault().Contains("```"))
@@ -44,7 +46,7 @@ namespace EQKillboard.DiscordParser.Parsers {
                             extractedKillmail.AttackerName = group.Value.Trim();
                             break;
                         case "zone":
-                            extractedKillmail.Zone = group.Value.Trim();
+                            extractedKillmail.Zone = ZoneMapper.fullZoneName(group.Value.Trim());
                             break;
                         case "killingBlow":
                             if (int.TryParse(group.Value.Trim(), out var killingBlow))
@@ -55,12 +57,28 @@ namespace EQKillboard.DiscordParser.Parsers {
                                 extractedKillmail.OverDamage = overDamage;
                             break;
                         case "involvedText":
-                            ParseInvolved(extractedKillmail, group.Value);
+                            await ParseInvolved(extractedKillmail, group.Value);
                             break;
                         default:
                             break;
                     }
                 }
+
+                
+                // Get level and class and guild for each char
+                var victimScraper = new CharBrowserScraper(extractedKillmail.VictimName);
+                var attackerScraper = new CharBrowserScraper(extractedKillmail.AttackerName);
+                await victimScraper.Fetch();
+                await attackerScraper.Fetch();
+
+                extractedKillmail.AttackerGuild = attackerScraper.Guild;
+                extractedKillmail.AttackerLevel = attackerScraper.Level;
+                extractedKillmail.AttackerClass = attackerScraper.Class;
+                extractedKillmail.AttackerIsNpc = attackerScraper.IsNpc;
+                extractedKillmail.VictimGuild = victimScraper.Guild;
+                extractedKillmail.VictimLevel = victimScraper.Level;
+                extractedKillmail.VictimClass = victimScraper.Class;
+                extractedKillmail.VictimIsNpc = victimScraper.IsNpc;
             }
             else
             {
@@ -71,7 +89,7 @@ namespace EQKillboard.DiscordParser.Parsers {
 
         }
 
-        private static void ParseInvolved(ParsedKillMail killMail, string involvedText)
+        private static async Task ParseInvolved(ParsedKillMail killMail, string involvedText)
         {
             var involvedMatches = Regex.Matches(involvedText, InvolvedPattern);
             foreach(Match involvedMatch in involvedMatches)
@@ -117,6 +135,16 @@ namespace EQKillboard.DiscordParser.Parsers {
                                 break;
                         }
                     }
+
+                    // Get level and class and guild for each char
+                    var attackerScraper = new CharBrowserScraper(parsedInvolved.AttackerName);
+                    await attackerScraper.Fetch();
+
+                    parsedInvolved.AttackerGuild = attackerScraper.Guild;
+                    parsedInvolved.AttackerLevel = attackerScraper.Level;
+                    parsedInvolved.AttackerClass = attackerScraper.Class;
+                    parsedInvolved.AttackerIsNpc = attackerScraper.IsNpc;
+
                     killMail.Involved.Add(parsedInvolved);
                 }
             }

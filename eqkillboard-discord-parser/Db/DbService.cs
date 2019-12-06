@@ -58,81 +58,6 @@ namespace EQKillboard.DiscordParser.Db
             }
         }
 
-        public async Task InsertOrUpdateClassAndLevel(CharacterModel character, Killmail killmail, bool updateKillmail)
-        {
-            using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
-                connection.Open();
-
-                var insertLevelSql = 
-                @"UPDATE character 
-                SET level = @Level
-                WHERE name = @CharName
-                ";
-
-                await connection.ExecuteAsync(insertLevelSql, new { Level = character.level, CharName = character.name });
-
-                if (updateKillmail)
-                {
-                    string insertLevelIntoKillmailSql;
-
-                    if (character.isAttacker) 
-                    {
-                        insertLevelIntoKillmailSql = 
-                        @"UPDATE killmail 
-                        SET attacker_level = @Level
-                        WHERE killmail_raw_id = @KillmailRawId
-                        ";
-                    }
-                    else 
-                    {
-                        insertLevelIntoKillmailSql = 
-                        @"UPDATE killmail 
-                        SET victim_level = @Level
-                        WHERE killmail_raw_id = @KillmailRawId
-                        ";
-                    }
-                    await connection.ExecuteAsync(insertLevelIntoKillmailSql, new { Level = character.level, KillmailRawId = killmail.killmail_raw_id});
-                }
-
-                if (!string.IsNullOrEmpty(character.className))
-                {
-                    var classSelectQuery = @"SELECT id FROM class WHERE name = @Name;";
-                    var classId = await connection.ExecuteScalarAsync<int?>(classSelectQuery, new { Name = character.className});
-                    if (classId != null)
-                    {
-                        character.classId = classId.Value;
-                    }
-                    else
-                    {
-                        // Update class table with class_id
-                        var insertClassSql = 
-                        @"INSERT INTO class (name) 
-                        VALUES (@ClassName)
-                        ON CONFLICT(name) DO UPDATE
-                        SET name = EXCLUDED.name
-                        RETURNING id
-                        ";
-
-                        var parameters = new DynamicParameters();
-                        parameters.Add("@ClassName", character.className);
-                        parameters.Add("@ClassId", direction: ParameterDirection.Output);
-
-                        await connection.ExecuteAsync(insertClassSql, parameters);
-                        character.classId = parameters.Get<int>("ClassId");
-                    }
-                }
-
-                // Update character table with class_id
-                var insertClassIntoCharSql = 
-                @"UPDATE character 
-                SET class_id = @ClassId
-                WHERE name = @CharName
-                ";
-
-                await connection.ExecuteAsync(insertClassIntoCharSql, new { ClassId = character.classId, CharName = character.name });
-            }
-        }
-
         private async Task<RawKillMail> InsertRawKillmailAsync(IDbConnection connection, IMessage discordMessage)
         {
             Console.WriteLine(discordMessage.Content.ToString());
@@ -169,8 +94,10 @@ namespace EQKillboard.DiscordParser.Db
             killmailToInsert.victim_guild_id = await GetOrInsertGuild(connection, parsedKillmailModel.VictimGuild);
             killmailToInsert.attacker_guild_id = await GetOrInsertGuild(connection, parsedKillmailModel.AttackerGuild);
             killmailToInsert.zone_id = await GetOrInsertZone(connection, parsedKillmailModel.Zone);
-            killmailToInsert.victim_id =  await GetOrInsertCharacter(connection, parsedKillmailModel.VictimName, killmailToInsert.victim_guild_id);
-            killmailToInsert.attacker_id = await GetOrInsertCharacter(connection, parsedKillmailModel.AttackerName, killmailToInsert.attacker_guild_id);
+            killmailToInsert.victim_id =  await GetOrInsertCharacter(connection, parsedKillmailModel.VictimName, parsedKillmailModel.VictimIsNpc, killmailToInsert.victim_guild_id, parsedKillmailModel.VictimLevel, parsedKillmailModel.VictimClass);
+            killmailToInsert.attacker_id = await GetOrInsertCharacter(connection, parsedKillmailModel.AttackerName, parsedKillmailModel.AttackerIsNpc, killmailToInsert.attacker_guild_id, parsedKillmailModel.AttackerLevel, parsedKillmailModel.AttackerClass);
+            killmailToInsert.victim_level = parsedKillmailModel.VictimLevel;
+            killmailToInsert.attacker_level = parsedKillmailModel.AttackerLevel;
 
             var dynamicParams = new DynamicParameters();
             dynamicParams.AddDynamicParams(new {
@@ -180,14 +107,16 @@ namespace EQKillboard.DiscordParser.Db
                 attacker_guild_id = killmailToInsert.attacker_guild_id,
                 zone_id = killmailToInsert.zone_id,
                 victim_id = killmailToInsert.victim_id,
-                attacker_id = killmailToInsert.attacker_id
+                attacker_id = killmailToInsert.attacker_id,
+                victim_level = killmailToInsert.victim_level,
+                attacker_level = killmailToInsert.attacker_level
             });
             dynamicParams.Add("@KillMailId", direction: ParameterDirection.Output);
 
             // Finally, insert killmail 
             var killmailInsertSql = 
-            @"INSERT INTO killmail (victim_id, victim_guild_id, attacker_id, attacker_guild_id, zone_id, killed_at, killmail_raw_id)
-            VALUES (@victim_id, @victim_guild_id, @attacker_id, @attacker_guild_id, @zone_id, @killed_at, @killmail_raw_id)
+            @"INSERT INTO killmail (victim_id, victim_guild_id, attacker_id, attacker_guild_id, zone_id, killed_at, killmail_raw_id, victim_level, attacker_level)
+            VALUES (@victim_id, @victim_guild_id, @attacker_id, @attacker_guild_id, @zone_id, @killed_at, @killmail_raw_id, @victim_level, @attacker_level)
             RETURNING id;
             ";
 
@@ -202,7 +131,7 @@ namespace EQKillboard.DiscordParser.Db
             killMailInvolvedToInsert.killmail_id = killMail.id;
             killMailInvolvedToInsert.attacker_guild_id = await GetOrInsertGuild(connection, involved.AttackerGuild);
             killMailInvolvedToInsert.attacker_level = involved.AttackerLevel;
-            killMailInvolvedToInsert.attacker_id = await GetOrInsertCharacter(connection, involved.AttackerName, killMailInvolvedToInsert.attacker_guild_id);
+            killMailInvolvedToInsert.attacker_id = await GetOrInsertCharacter(connection, involved.AttackerName, involved.AttackerIsNpc, killMailInvolvedToInsert.attacker_guild_id, involved.AttackerLevel, involved.AttackerClass);
             killMailInvolvedToInsert.melee_damage = involved.MeleeDamage;
             killMailInvolvedToInsert.melee_hits = involved.MeleeHits;
             killMailInvolvedToInsert.spell_damage = involved.SpellDamage;
@@ -275,33 +204,72 @@ namespace EQKillboard.DiscordParser.Db
             return parameters.Get<int>("ZoneId");
         }
 
-        private async Task<int> GetOrInsertCharacter(IDbConnection connection, string name, int? guildId)
+        private async Task<int> GetOrInsertClass(IDbConnection connection, string name)
         {
+            var classSelectQuery = @"SELECT id FROM class WHERE name = @Name;";
+            var classId = await connection.ExecuteScalarAsync<int?>(classSelectQuery, new { Name = name});
+            if (classId != null)
+            {
+                return classId.Value;
+            }
+
+            var parameters = new DynamicParameters();
+            var classInsertSql = @"INSERT INTO class (name) 
+                        VALUES (@ClassName)
+                        ON CONFLICT(name) DO UPDATE 
+                        SET name = EXCLUDED.name 
+                        RETURNING id;
+                        ";
+
+            parameters.Add("@ClassName", name);
+            parameters.Add("@ClassId", direction: ParameterDirection.Output);
+
+            await connection.ExecuteAsync(classInsertSql, parameters);
+            return parameters.Get<int>("ClassId");
+        }
+
+        private async Task<int> GetOrInsertCharacter(IDbConnection connection, string name, Boolean isNpc, int? guildId, int? level, string className)
+        {
+            int? classId = null;
+            if (!string.IsNullOrEmpty(className))
+            {
+                classId = await GetOrInsertClass(connection, className);
+            }
+
             var parameters = new DynamicParameters();
             
             var charSelectQuery = @"SELECT id FROM character WHERE name = @Name;";
             var characterId = await connection.ExecuteScalarAsync<int?>(charSelectQuery, new { Name = name});
             if (characterId != null)
             {
-                var charUpdateQuery = @"UPDATE character SET guild_id = @GuildId WHERE id = @Id";
+                var charUpdateQuery = @"UPDATE character SET is_npc = @IsNpc, guild_id = @GuildId, level = @Level, class_id = @ClassId WHERE id = @Id";
                 parameters.Add("@Id", characterId.Value);
+                parameters.Add("@IsNpc", isNpc);
                 parameters.Add("@GuildId", guildId);
+                parameters.Add("@Level", level);
+                parameters.Add("@ClassId", classId);
                 
                 await connection.ExecuteAsync(charUpdateQuery, parameters);
                 return characterId.Value;
             }
             else
             {
-                var victimCharInsertSql = @"INSERT INTO character (name, guild_id) 
-                            VALUES (@VictimName, @GuildId)
+                var victimCharInsertSql = @"INSERT INTO character (name, is_npc, guild_id, level, class_id) 
+                            VALUES (@VictimName, @IsNpc, @GuildId, @Level, @ClassId)
                             ON CONFLICT(name) DO UPDATE 
                             SET name = EXCLUDED.name,
-                            guild_id = EXCLUDED.guild_id
+                            is_npc = EXCLUDED.is_npc,
+                            guild_id = EXCLUDED.guild_id,
+                            level = EXCLUDED.level,
+                            class_id = EXCLUDED.class_id
                             RETURNING id;
                             ";
 
                 parameters.Add("@VictimName", name);
+                parameters.Add("@IsNpc", isNpc);
                 parameters.Add("@GuildId", guildId);
+                parameters.Add("@Level", level);
+                parameters.Add("@ClassId", classId);
                 parameters.Add("@VictimId", direction: ParameterDirection.Output);
 
                 await connection.ExecuteAsync(victimCharInsertSql, parameters);
