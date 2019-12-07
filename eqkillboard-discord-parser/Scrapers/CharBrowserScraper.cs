@@ -21,6 +21,29 @@ namespace EQKillboard.DiscordParser.Scrapers {
 
         public async Task Fetch() 
         {
+            if (NpcNames.Names.Contains(_characterName.ToLower()))
+            {
+                _isNpc = true;
+            }
+            if (PetNames.Names.Contains(_characterName.ToLower()))
+            {
+                _isNpc = true;
+            }
+            if (_characterName.ToLower().EndsWith(" Warder".ToLower()))
+            {
+                _isNpc = true;
+            }
+            if (_characterName.ToLower().EndsWith(" pet".ToLower()))
+            {
+                _isNpc = true;
+            }
+
+            if (_isNpc)
+            {
+                _success = true;
+                return;
+            }
+
             var address = _charBrowserUrl + _characterName;
             var document = await BrowsingContext.New(_config).OpenAsync(address);
             var cellSelector = "table.StatTable tbody";
@@ -54,13 +77,6 @@ namespace EQKillboard.DiscordParser.Scrapers {
                     }
                 }
             }
-
-            address = _npcSearchUrl + _characterName;
-            document = await BrowsingContext.New(_config).OpenAsync(address);
-            cellSelector = "div.page-content-ajax li a";
-            var cellsAll = document.QuerySelectorAll(cellSelector);
-            _isNpc = cellsAll.Any(x => x.TextContent.Equals(_characterName, StringComparison.InvariantCultureIgnoreCase));
-
             _success = true;
         }
 
