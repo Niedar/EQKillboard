@@ -27,6 +27,8 @@ namespace EQKillboard.DiscordParser
         private string DbConnectionString;
         private DbService dbService;
         private IMessage lastRetrievedDiscordMsg;
+
+        private DateTimeOffset seasonStart;
         public static void Main(string[] args) {
             new Program().MainAsync().GetAwaiter().GetResult();
         }
@@ -39,7 +41,9 @@ namespace EQKillboard.DiscordParser
                             .SetBasePath(Directory.GetCurrentDirectory())
                             .AddJsonFile("appsettings.json"); 
 
-            configuration = builder.Build(); 
+            configuration = builder.Build();
+
+            seasonStart = DateTimeOffset.Parse(configuration["Settings:SeasonStart"]);
 
             // call connection string from config
             DbConnectionString = configuration["ConnectionStrings:DefaultConnection"];
@@ -66,7 +70,7 @@ namespace EQKillboard.DiscordParser
  
         private Task MessageReceived(SocketMessage message)
         {
-            if (message.Channel.Name.IndexOf("yellowtext", StringComparison.OrdinalIgnoreCase) >= 0)
+            if (message.Channel.Name.IndexOf("death_recap", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 Task.Run(() => ProcessMessage(message));
             }
@@ -122,6 +126,11 @@ namespace EQKillboard.DiscordParser
 
         private async Task ProcessMessage(IMessage message)
         {
+            if (message.CreatedAt < seasonStart)
+            {
+                return;
+            }
+            
             try
             {
                 ParsedKillMail parsedKillmail = null;

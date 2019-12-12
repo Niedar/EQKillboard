@@ -6,10 +6,11 @@ import Killmails from './Killmails';
 import TopStats from './TopStats';
 import { Button, Icon } from 'antd';
 import { Spin, Row, Col } from 'antd';
+import { SeasonContext } from './SeasonContext'
 
 
 // TODO: turn this into a component
-const getPaginationButtons = pageInfo => {
+const getPaginationButtons = (pageInfo, season) => {
   let buttonStyle = {
     marginTop: "20px",
     marginRight: "20px"
@@ -19,14 +20,14 @@ const getPaginationButtons = pageInfo => {
 
   nextButton = (
     <Button type="primary" style={buttonStyle} disabled={!pageInfo.hasNextPage}>
-      <Link to={`/after/${pageInfo.endCursor}`} style={{ textDecoration: "none"}}>
+      <Link to={`/${season}/after/${pageInfo.endCursor}`} style={{ textDecoration: "none"}}>
         Forward<Icon type="right" />
       </Link>
     </Button>
   )
   prevButton = (
     <Button type="primary" style={buttonStyle} disabled={!pageInfo.hasPreviousPage}>
-      <Link to={`/before/${pageInfo.startCursor}`} style={{ textDecoration: "none"}}>
+      <Link to={`/${season}/before/${pageInfo.startCursor}`} style={{ textDecoration: "none"}}>
         <Icon type="left" />Backward
       </Link>
     </Button>
@@ -45,6 +46,7 @@ const getPaginationButtons = pageInfo => {
 };
 
 class HomePage extends Component {
+  static contextType = SeasonContext;
   render() {
     return (
       <React.Fragment>
@@ -73,9 +75,9 @@ class HomePage extends Component {
               <div>
                 <br />
                 <h1 style={{marginLeft: "10px"}}>Latest Kills</h1>
-                { getPaginationButtons(data.allKillmails.pageInfo) }
+                { getPaginationButtons(data.allKillmails.pageInfo, this.context) }
                 <Killmails killmails={data.allKillmails.nodes} />
-                { getPaginationButtons(data.allKillmails.pageInfo) }
+                { getPaginationButtons(data.allKillmails.pageInfo, this.context) }
               </div>
             );
         }}

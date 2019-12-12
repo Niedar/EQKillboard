@@ -1,13 +1,16 @@
 import React, { Component } from "react"
 import { Query } from "react-apollo"
 import gql from "graphql-tag"
+import { SeasonContext } from "./SeasonContext"
 
 export default class TopStatsQuery extends Component {
+  static contextType = SeasonContext;
   render() {
     const { children } = this.props
+    const season = this.context;
 
     return (
-      <Query query={GET_TOPSTATS}>
+      <Query query={GET_TOPSTATS} variables={{ season }}>
         {result => children(result)}
       </Query>
     )
@@ -15,8 +18,8 @@ export default class TopStatsQuery extends Component {
 }
 
 const GET_TOPSTATS = gql`
-query allStats {
-  allCharacters {
+query allStats($season: Int) {
+  allCharacters(condition: {season: $season}) {
     nodes {
       nodeId,
       id,
@@ -26,7 +29,7 @@ query allStats {
       }
     }
   }
-  allGuilds {
+  allGuilds(condition: {season: $season}) {
     nodes {
       nodeId,
       id,

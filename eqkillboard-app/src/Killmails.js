@@ -3,12 +3,15 @@ import { Table } from 'antd';
 import moment from 'moment';
 import groupBy from 'lodash/groupBy';
 import { Link } from 'react-router-dom';
+import { SeasonContext } from './SeasonContext'
 
 const { Column } = Table;
 const killColor = "#daf7da";
 const deathColor = "#ffe8e7"
 
 class Killmails extends Component {
+  static contextType = SeasonContext;
+
   groupKillmailsByKilledAt = killmails => {
     return groupBy(killmails, (killmail) => {
       return moment(killmail.killedAt).format("LL");
@@ -41,6 +44,7 @@ class Killmails extends Component {
 
   render() {
     var killmailsGroupedByKilledAt = this.groupKillmailsByKilledAt(this.props.killmails);
+    const season = this.context;
     return (
       Object.keys(killmailsGroupedByKilledAt).map((dateKey, index) => {
         let killmails = killmailsGroupedByKilledAt[dateKey];
@@ -63,7 +67,7 @@ class Killmails extends Component {
                 dataIndex="zoneByZoneId"
                 key={`zoneByZoneId-${index}`}
                 render={(text, record) => (
-                  <Link to={`/zone/${record.zoneByZoneId.id}`}>{record.zoneByZoneId.name}</Link>
+                  <Link to={`/${season}/zone/${record.zoneByZoneId.id}`}>{record.zoneByZoneId.name}</Link>
                 )}
                 width={150}
               /> 
@@ -76,13 +80,13 @@ class Killmails extends Component {
                   var guildElement;
 
                   characterElement = (
-                    <Link to={`/character/${record.characterByVictimId.id}`}>
+                    <Link to={`/${season}/character/${record.characterByVictimId.id}`}>
                       {record.characterByVictimId.name} ({record.victimLevel ? record.victimLevel : '?'})
                     </Link>                    
                   )
                   if (record.guildByVictimGuildId) {
                     guildElement = (
-                      <Link to={`/guild/${record.guildByVictimGuildId.id}`}>
+                      <Link to={`/${season}/guild/${record.guildByVictimGuildId.id}`}>
                         {record.guildByVictimGuildId.name}
                       </Link>
                     )
@@ -105,13 +109,13 @@ class Killmails extends Component {
                   var guildElement;
 
                   characterElement = (
-                    <Link to={`/character/${record.characterByAttackerId.id}`}>
+                    <Link to={`/${season}/character/${record.characterByAttackerId.id}`}>
                       {record.characterByAttackerId.name} ({record.attackerLevel ? record.attackerLevel : '?'})
                     </Link>                    
                   )
                   if (record.guildByAttackerGuildId) {
                     guildElement = (
-                      <Link to={`/guild/${record.guildByAttackerGuildId.id}`}>
+                      <Link to={`/${season}/guild/${record.guildByAttackerGuildId.id}`}>
                         {record.guildByAttackerGuildId.name}
                       </Link>
                     )

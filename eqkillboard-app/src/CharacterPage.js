@@ -5,6 +5,7 @@ import CharacterInfoQuery from './CharacterInfoQuery';
 import Killmails from './Killmails';
 import { Button, Icon } from 'antd';
 import { Spin, Row, Col } from 'antd';
+import { SeasonContext } from './SeasonContext';
 
 
 
@@ -45,7 +46,9 @@ const getPaginationButtons = (pageInfo, baseUrl) => {
 };
 
 class CharacterPage extends Component {
+  static contextType = SeasonContext;
   render() {
+    const season = this.context;
     return (
       <React.Fragment>
         <CharacterInfoQuery characterId={this.props.match.params.characterId}>
@@ -80,9 +83,9 @@ class CharacterPage extends Component {
             
             return (
               <div>
-                { getPaginationButtons(data.allKillmails.pageInfo, `/character/${this.props.match.params.characterId}`) }
+                { getPaginationButtons(data.allKillmails.pageInfo, `/${season}/character/${this.props.match.params.characterId}`) }
                 <Killmails killmails={data.allKillmails.nodes} characterId={this.props.match.params.characterId}/>
-                { getPaginationButtons(data.allKillmails.pageInfo, `/character/${this.props.match.params.characterId}`) }
+                { getPaginationButtons(data.allKillmails.pageInfo, `/${season}/character/${this.props.match.params.characterId}`) }
               </div>
             );
         }}

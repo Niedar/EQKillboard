@@ -18,7 +18,7 @@ namespace EQKillboard.DiscordParser.Parsers {
                                                 + @"\s(?<overDamage>.*)"
                                                 + @"\s*(?<involvedText>(?:.|\n)*)";
         
-        private const string InvolvedPattern = @"(?<attacker>.*)\s*contributed\s*(?:(?<meleeDamage1>\d*) melee damage across (?<meleehit1>\d*) hits?|(?<spellDamage1>\d*) spell damage across (?<spellHit1>\d*) hits?)(?: and\s*(?:(?<meleeDamage2>\d*) melee damage across (?<meleeHit2>\d*) hit?s|(?<spellDamage2>\d*) spell damage across (?<spellHit2>\d*) hit?s)|\.)";
+        private const string InvolvedPattern = @"(?<attacker>.*)\s*contributed\s*(?:(?<meleeDamage1>\d*) melee damage across (?<meleeHit1>\d*) hits?|(?<spellDamage1>\d*) spell damage across (?<spellHit1>\d*) hits?)(?: and\s*(?:(?<meleeDamage2>\d*) melee damage across (?<meleeHit2>\d*) hit?s|(?<spellDamage2>\d*) spell damage across (?<spellHit2>\d*) hit?s)|\.)";
                                                         
         public static async Task<ParsedKillMail> ParseKillmail(string input) {
             // Remove special formatting

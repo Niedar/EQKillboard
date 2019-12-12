@@ -1,8 +1,9 @@
 import React from 'react';
 import { Icon, Input, AutoComplete } from 'antd';
 import { withApollo } from 'react-apollo';
-import { withRouter } from 'react-router-dom'
-import gql from "graphql-tag"
+import { withRouter } from 'react-router-dom';
+import gql from "graphql-tag";
+import { SeasonContext } from './SeasonContext';
 
 const Option = AutoComplete.Option;
 const OptGroup = AutoComplete.OptGroup;
@@ -31,98 +32,98 @@ const createOptions = dataSource =>  {
 };
 
 class Search extends React.Component {
-    constructor() {
-        super();
+  static contextType = SeasonContext;
+  constructor() {
+      super();
 
-        this.state= {
-            value: '',
-            suggestions: []
-        }
-    }
-    onSearch = value => {
-        this.props.client.query({
-            query: GET_SEARCHALL,
-            variables: { searchText: value}
-        }).then(result => {
-            var self = this;
-            let suggestions = [];
-            if (result.data) {
-                var characterGroup = {
-                    title: "Characters",
-                    children: result.data.searchCharacters.nodes.map(node => {
-                        return {
-                            character_id: node.id,
-                            title: node.name,
-                            count: 1000
-                        }
-                    })
-                }
-                var guildGroup =  {
-                    title: "Guilds",
-                    children: result.data.searchGuilds.nodes.map(node => {
-                        return {
-                            guild_id: node.id,
-                            title: node.name,
-                            count: 1000
-                        }
-                    })
-                }
-                suggestions = [characterGroup, guildGroup]
-            }
-            self.setState({
-                suggestions
-            });
-        })
-        this.setState({
-          value
-        })
-    }
-    onSelect = (value, option) => {
-      console.log(value);
-      console.log(option);
-
-      if (option.props.character_id) {
-        this.props.history.push(`/character/${option.props.character_id}`);
-      } else if (option.props.guild_id) {
-        this.props.history.push(`/guild/${option.props.guild_id}`);
+      this.state= {
+          value: '',
+          suggestions: []
       }
-      this.setState({
-        value: ''
-      })
+  }
+  onSearch = value => {
+    const season = this.context;
+    this.props.client.query({
+      query: GET_SEARCHALL,
+      variables: { season,  searchText: value }
+    }).then(result => {
+      var self = this;
+      let suggestions = [];
+      if (result.data) {
+        var characterGroup = {
+          title: "Characters",
+          children: result.data.searchCharacters.nodes.map(node => {
+            return {
+              character_id: node.id,
+              title: node.name,
+              count: 1000
+            }
+          })
+        }
+        var guildGroup = {
+          title: "Guilds",
+          children: result.data.searchGuilds.nodes.map(node => {
+            return {
+              guild_id: node.id,
+              title: node.name,
+              count: 1000
+            }
+          })
+        }
+        suggestions = [characterGroup, guildGroup]
+      }
+      self.setState({
+        suggestions
+      });
+    });
+    this.setState({
+      value
+    });
+  }
+  onSelect = (value, option) => {
+    const season = this.context;
+    if (option.props.character_id) {
+      this.props.history.push(`/${season}/character/${option.props.character_id}`);
+    } else if (option.props.guild_id) {
+      this.props.history.push(`/${season}/guild/${option.props.guild_id}`);
     }
-    render() {
-        return (
-            <div className="certain-category-search-wrapper" style={{ width: 250, float: "right" }}>
-              <AutoComplete
-                className="certain-category-search"
-                dropdownClassName="certain-category-search-dropdown"
-                dropdownMatchSelectWidth={false}
-                dropdownStyle={{ width: 250 }}
-                size="large"
-                style={{ width: '100%' }}
-                dataSource={createOptions(this.state.suggestions)}
-                placeholder="Search..."
-                optionLabelProp="value"
-                value={this.state.value}
-                onSearch={this.onSearch}
-                onSelect={this.onSelect}
-              >
-                <Input suffix={<Icon type="search" className="certain-category-icon" />} />
-              </AutoComplete>
-            </div>
-          );
-    }
+    this.setState({
+      value: ''
+    })
+  }
+  render() {
+      return (
+          <div className="certain-category-search-wrapper" style={{ width: 250, float: "right" }}>
+            <AutoComplete
+              className="certain-category-search"
+              dropdownClassName="certain-category-search-dropdown"
+              dropdownMatchSelectWidth={false}
+              dropdownStyle={{ width: 250 }}
+              size="large"
+              style={{ width: '100%' }}
+              dataSource={createOptions(this.state.suggestions)}
+              placeholder="Search..."
+              optionLabelProp="value"
+              value={this.state.value}
+              onSearch={this.onSearch}
+              onSelect={this.onSelect}
+            >
+              <Input suffix={<Icon type="search" className="certain-category-icon" />} />
+            </AutoComplete>
+          </div>
+        );
+  }
 }
 
 const GET_SEARCHALL = gql`
-query searchAll($searchText: String) {
-    searchCharacters(search: $searchText) {
+query searchAll($season: Int, $searchText: String) {
+    searchCharacters(season: $season, search: $searchText, filter: {season: {equalTo: $season}}) {
       nodes {
         id,
         name
       }
     },
-    searchGuilds(search: $searchText) {
+    searchGuilds(season: $season, search: $searchText, filter: {season: {equalTo: $season}}) {
       nodes {
         id,
         name

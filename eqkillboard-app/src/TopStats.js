@@ -3,11 +3,15 @@ import { Table, Row, Col } from 'antd';
 import {Link} from 'react-router-dom';
 import orderBy from 'lodash/orderBy';
 import take from 'lodash/take';
+import { SeasonContext } from './SeasonContext';
 
 const { Column } = Table;
 
 class TopStats extends Component {
+  static contextType = SeasonContext;
   render() {
+    const season = this.context;
+
     var topCharacters = take(orderBy(this.props.allCharacters.nodes, [node => {
         return node.killmailsByAttackerId.totalCount;
     }], ["desc"]), 10);
@@ -32,7 +36,7 @@ class TopStats extends Component {
               title="Character"
               key="characterId"
               render={(text, record) => (
-                <Link to={`/character/${record.id}`}>
+                <Link to={`/${season}/character/${record.id}`}>
                   {record.name}
                 </Link> 
               )}
@@ -55,7 +59,7 @@ class TopStats extends Component {
               title="Guild"
               key="guildId"
               render={(text, record) => (
-                <Link to={`/guild/${record.id}`}>
+                <Link to={`/${season}/guild/${record.id}`}>
                   {record.name}
                 </Link> 
               )}

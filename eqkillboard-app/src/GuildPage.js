@@ -5,6 +5,7 @@ import GuildInfoQuery from './GuildInfoQuery';
 import Killmails from './Killmails';
 import { Button, Icon } from 'antd';
 import { Spin, Row, Col } from 'antd';
+import { SeasonContext } from './SeasonContext';
 
 
 
@@ -45,7 +46,9 @@ const getPaginationButtons = (pageInfo, baseUrl) => {
 };
 
 class GuildPage extends Component {
+  static contextType = SeasonContext;
   render() {
+    const season = this.context;
     return (
       <React.Fragment>
         <GuildInfoQuery guildId={this.props.match.params.guildId}>
@@ -73,9 +76,9 @@ class GuildPage extends Component {
             
             return (
               <div>
-                { getPaginationButtons(data.allKillmails.pageInfo, `/guild/${this.props.match.params.guildId}`) }
+                { getPaginationButtons(data.allKillmails.pageInfo, `/${season}/guild/${this.props.match.params.guildId}`) }
                 <Killmails killmails={data.allKillmails.nodes} guildId={this.props.match.params.guildId}/>
-                { getPaginationButtons(data.allKillmails.pageInfo, `/guild/${this.props.match.params.guildId}`) }
+                { getPaginationButtons(data.allKillmails.pageInfo, `/${season}/guild/${this.props.match.params.guildId}`) }
               </div>
             );
         }}

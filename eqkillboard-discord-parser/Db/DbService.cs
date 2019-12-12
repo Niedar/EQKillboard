@@ -15,6 +15,7 @@ namespace EQKillboard.DiscordParser.Db
     {
         private IConfiguration configuration;
         private string DbConnectionString;
+        private int Season;
         public DbService()
         {
             // add json config for DBsettings, token, etc.
@@ -26,6 +27,7 @@ namespace EQKillboard.DiscordParser.Db
 
             // call connection string from config
             DbConnectionString = configuration["ConnectionStrings:DefaultConnection"];
+            Season = Convert.ToInt32(configuration["Settings:Season"]);
         }
 
         public async Task<Killmail> InsertRawAndParsedKillMailAsync(IMessage discordMessage, ParsedKillMail parsedKillMail)
@@ -63,7 +65,7 @@ namespace EQKillboard.DiscordParser.Db
             Console.WriteLine(discordMessage.Content.ToString());
             DynamicParameters parameters = new DynamicParameters();
             
-            var sql = @"INSERT INTO killmail_raw (discord_message_id, message) Values (@MessageId, @Message)
+            var sql = @"INSERT INTO killmail_raw (discord_message_id, message, season) Values (@MessageId, @Message, @Season)
             ON CONFLICT (discord_message_id) DO UPDATE
             SET message = EXCLUDED.message
             RETURNING id, discord_message_id, message, status_type_id
@@ -72,6 +74,7 @@ namespace EQKillboard.DiscordParser.Db
             decimal messageId = discordMessage.Id;
             parameters.Add("@MessageId", messageId);
             parameters.Add("@Message", discordMessage.Content);
+            parameters.Add("@Season", Season);
 
             return await connection.QueryFirstAsync<RawKillMail>(sql, parameters);
         }
@@ -109,14 +112,15 @@ namespace EQKillboard.DiscordParser.Db
                 victim_id = killmailToInsert.victim_id,
                 attacker_id = killmailToInsert.attacker_id,
                 victim_level = killmailToInsert.victim_level,
-                attacker_level = killmailToInsert.attacker_level
+                attacker_level = killmailToInsert.attacker_level,
+                season = Season
             });
             dynamicParams.Add("@KillMailId", direction: ParameterDirection.Output);
 
             // Finally, insert killmail 
             var killmailInsertSql = 
-            @"INSERT INTO killmail (victim_id, victim_guild_id, attacker_id, attacker_guild_id, zone_id, killed_at, killmail_raw_id, victim_level, attacker_level)
-            VALUES (@victim_id, @victim_guild_id, @attacker_id, @attacker_guild_id, @zone_id, @killed_at, @killmail_raw_id, @victim_level, @attacker_level)
+            @"INSERT INTO killmail (victim_id, victim_guild_id, attacker_id, attacker_guild_id, zone_id, killed_at, killmail_raw_id, victim_level, attacker_level, season)
+            VALUES (@victim_id, @victim_guild_id, @attacker_id, @attacker_guild_id, @zone_id, @killed_at, @killmail_raw_id, @victim_level, @attacker_level, @season)
             RETURNING id;
             ";
 
@@ -158,21 +162,23 @@ namespace EQKillboard.DiscordParser.Db
             }
             else 
             {
-                var guildSelectQuery = @"SELECT id FROM guild WHERE name = @Name;";
-                var guild_id = await connection.ExecuteScalarAsync<int?>(guildSelectQuery, new { Name = name});
+                var guildSelectQuery = @"SELECT id FROM guild WHERE name = @Name AND season = @Season;";
+                var guild_id = await connection.ExecuteScalarAsync<int?>(guildSelectQuery, new { Name = name, Season});
                 if (guild_id != null)
                 {
                     return guild_id.Value;
                 }
                 
-                var victimGuildInsertSql = @"INSERT INTO guild (name) 
-                                        VALUES (@VictimGuild)
-                                        ON CONFLICT(name) DO UPDATE 
-                                        SET name = EXCLUDED.name 
+                var victimGuildInsertSql = @"INSERT INTO guild (name, season) 
+                                        VALUES (@VictimGuild, @Season)
+                                        ON CONFLICT(name, season) DO UPDATE 
+                                        SET name = EXCLUDED.name,
+                                        season = EXCLUDED.season
                                         RETURNING id;
                                         ";
 
                 parameters.Add("@VictimGuild", name);
+                parameters.Add("@Season", Season);
                 parameters.Add("@VictimGuildId", direction: ParameterDirection.Output);
 
                 await connection.ExecuteAsync(victimGuildInsertSql, parameters);
@@ -238,8 +244,8 @@ namespace EQKillboard.DiscordParser.Db
 
             var parameters = new DynamicParameters();
             
-            var charSelectQuery = @"SELECT id FROM character WHERE name = @Name;";
-            var characterId = await connection.ExecuteScalarAsync<int?>(charSelectQuery, new { Name = name});
+            var charSelectQuery = @"SELECT id FROM character WHERE name = @Name AND season = @Season;";
+            var characterId = await connection.ExecuteScalarAsync<int?>(charSelectQuery, new { Name = name, Season});
             if (characterId != null)
             {
                 var charUpdateQuery = @"UPDATE character SET is_npc = @IsNpc, guild_id = @GuildId, level = @Level, class_id = @ClassId WHERE id = @Id";
@@ -254,14 +260,15 @@ namespace EQKillboard.DiscordParser.Db
             }
             else
             {
-                var victimCharInsertSql = @"INSERT INTO character (name, is_npc, guild_id, level, class_id) 
-                            VALUES (@VictimName, @IsNpc, @GuildId, @Level, @ClassId)
-                            ON CONFLICT(name) DO UPDATE 
+                var victimCharInsertSql = @"INSERT INTO character (name, is_npc, guild_id, level, class_id, season) 
+                            VALUES (@VictimName, @IsNpc, @GuildId, @Level, @ClassId, @Season)
+                            ON CONFLICT(name, season) DO UPDATE 
                             SET name = EXCLUDED.name,
                             is_npc = EXCLUDED.is_npc,
                             guild_id = EXCLUDED.guild_id,
                             level = EXCLUDED.level,
-                            class_id = EXCLUDED.class_id
+                            class_id = EXCLUDED.class_id,
+                            season = EXCLUDED.season
                             RETURNING id;
                             ";
 
@@ -270,6 +277,7 @@ namespace EQKillboard.DiscordParser.Db
                 parameters.Add("@GuildId", guildId);
                 parameters.Add("@Level", level);
                 parameters.Add("@ClassId", classId);
+                parameters.Add("@Season", Season);
                 parameters.Add("@VictimId", direction: ParameterDirection.Output);
 
                 await connection.ExecuteAsync(victimCharInsertSql, parameters);

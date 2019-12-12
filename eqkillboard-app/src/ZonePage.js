@@ -5,6 +5,7 @@ import ZoneInfoQuery from './ZoneInfoQuery';
 import Killmails from './Killmails';
 import { Button, Icon } from 'antd';
 import { Spin, Row, Col } from 'antd';
+import { SeasonContext } from './SeasonContext';
 
 
 
@@ -45,7 +46,9 @@ const getPaginationButtons = (pageInfo, baseUrl) => {
 };
 
 class ZonePage extends Component {
+  static contextType = SeasonContext;
   render() {
+    const season = this.context;
     return (
       <React.Fragment>
         <ZoneInfoQuery zoneId={this.props.match.params.zoneId}>
@@ -72,9 +75,9 @@ class ZonePage extends Component {
             
             return (
               <div>
-                { getPaginationButtons(data.allKillmails.pageInfo, `/zone/${this.props.match.params.zoneId}`) }
+                { getPaginationButtons(data.allKillmails.pageInfo, `/${season}/zone/${this.props.match.params.zoneId}`) }
                 <Killmails killmails={data.allKillmails.nodes} zoneId={this.props.match.params.zoneId}/>
-                { getPaginationButtons(data.allKillmails.pageInfo, `/zone/${this.props.match.params.zoneId}`) }
+                { getPaginationButtons(data.allKillmails.pageInfo, `/${season}/zone/${this.props.match.params.zoneId}`) }
               </div>
             );
         }}
