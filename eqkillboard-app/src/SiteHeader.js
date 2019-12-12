@@ -15,7 +15,7 @@ class SiteHeader extends Component {
         <Header>
           <Row>
             <Col xxl={4} xl={6} lg={6} md={8} sm={6} xs={24}>
-              <Link to={"/"} style={{ textDecoration: "none"}}>
+              <Link to={`/${season}/`} style={{ textDecoration: "none"}}>
                 <h1 style={{color: "white"}}>EQKillboard</h1>
               </Link>
             </Col>
