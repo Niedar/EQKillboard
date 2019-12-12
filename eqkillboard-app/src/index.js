@@ -5,7 +5,7 @@ import { ApolloProvider } from 'react-apollo';
 import { BrowserRouter } from 'react-router-dom'
 import './index.css';
 import App from './App';
-import registerServiceWorker from './registerServiceWorker';
+import { unregister } from './registerServiceWorker';
 
 const client = new ApolloClient({
     uri: 'http://localhost:5000/graphql',
@@ -19,4 +19,4 @@ ReactDOM.render(
     </ApolloProvider>, 
     document.getElementById('root')
 );
-registerServiceWorker();
+unregister();
