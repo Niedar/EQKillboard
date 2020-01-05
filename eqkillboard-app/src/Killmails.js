@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Table } from 'antd';
+import { Table, Tag } from 'antd';
 import moment from 'moment';
 import groupBy from 'lodash/groupBy';
 import { Link } from 'react-router-dom';
@@ -40,6 +40,23 @@ class Killmails extends Component {
     return {
       style: style
     };
+  }
+
+  othersTag = (count) => {
+    if (count == 0 || count == 1) {
+      return (
+        <Tag color="#87d068">Solo</Tag>
+      )
+    }
+    if (count == 2) {
+      return (
+        <Tag color="geekblue">{count - 1} other</Tag>
+      )
+    } else {
+      return (
+        <Tag color="geekblue">{count - 1} others</Tag>
+      )
+    }
   }
 
   render() {
@@ -123,7 +140,7 @@ class Killmails extends Component {
 
                   return (
                     <React.Fragment>
-                        {characterElement}
+                        {characterElement} {this.othersTag(record.killmailInvolvedsByKillmailId.totalCount)}
                         <br />
                         {guildElement}
                     </React.Fragment>          

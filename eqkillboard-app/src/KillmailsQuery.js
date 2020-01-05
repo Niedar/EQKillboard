@@ -65,7 +65,10 @@ fragment KillmailData on Killmail {
     id,
     name
   },
-  killedAt  
+  killedAt,
+  killmailInvolvedsByKillmailId {
+    totalCount
+  }
 }
 `;
 
