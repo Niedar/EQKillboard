@@ -26,5 +26,13 @@ query guildInfo($guildId: Int!) {
       totalCount
     }
   }
+  allGuildRankedKillDeaths(condition: {id: $guildId}) {
+    nodes {
+      id
+      name
+      rankedKills
+      rankedDeaths
+    }
+  }
 }
 `;

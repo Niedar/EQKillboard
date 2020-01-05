@@ -6,3 +6,6 @@
 @v1.0.0 2019-08-12T18:36:12Z Niedar <Niedar@gmail.com> # Initial release
 
 0002_killmail_involved_item_tables [@v1.0.0] 2019-08-12T18:55:46Z Niedar <Niedar@gmail.com> # Add new tables for new information provided on item sales and all character involved in a kill
+@v2.0.0 2020-01-03T23:07:15Z Niedar <Niedar@gmail.com> # Add support for new killmail data and support for multiple seasons
+
+0003_ranked_kill_stats [@v2.0.0] 2020-01-03T23:10:02Z Niedar <Niedar@gmail.com> # Add support for filtering killmails for ranked kill stats

@@ -35,5 +35,13 @@ query characterInfo($characterId: Int!) {
       totalCount
     }
   }
+  allCharacterRankedKillDeaths(condition: {id: $characterId}) {
+    nodes {
+      id
+      name
+      rankedKills
+      rankedDeaths
+    }
+  }
 }
 `;

@@ -51,7 +51,7 @@ class ZonePage extends Component {
     const season = this.context;
     return (
       <React.Fragment>
-        <ZoneInfoQuery zoneId={this.props.match.params.zoneId}>
+        <ZoneInfoQuery zoneId={parseInt(this.props.match.params.zoneId)}>
         {({ loading, error, data}) => {
             if (loading) return null;
             if (error) return `Error! ${error.message}`;
@@ -67,7 +67,7 @@ class ZonePage extends Component {
         <KillmailsQuery
           before={this.props.match.params.cursorDirection === "before" ? this.props.match.params.cursor : null}
           after={this.props.match.params.cursorDirection === "after" ? this.props.match.params.cursor : null}
-          zoneId={this.props.match.params.zoneId}
+          zoneId={parseInt(this.props.match.params.zoneId)}
         >
         {({ loading, error, data}) => {
             if (loading) return <Spin size="large" />;

@@ -39,5 +39,21 @@ query allStats($season: Int) {
       }
     }
   }
+  allGuildRankedKillDeaths(first: 50, condition: {season: $season}, orderBy: RANKED_KILLS_DESC) {
+    nodes {
+      id
+      name
+      rankedKills
+      rankedDeaths
+    }
+  }
+  allCharacterRankedKillDeaths(first: 50, condition: {season: $season}, orderBy: RANKED_KILLS_DESC) {
+    nodes {
+      id
+      name
+      rankedKills
+      rankedDeaths
+    }
+  }
 }
 `;
