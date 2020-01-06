@@ -27,11 +27,11 @@ CREATE VIEW character_ranked_kill_death AS
         c.name,
         c.level,
         c.class_id,
-        character_ranked_kills.ranked_kills,
-        character_ranked_deaths.ranked_deaths,
+        COALESCE(character_ranked_kills.ranked_kills, 0) AS ranked_kills,
+        COALESCE(character_ranked_deaths.ranked_deaths, 0) AS ranked_deaths,
         c.season
     FROM character c
-    INNER JOIN (
+    LEFT JOIN (
         SELECT
             distinct_character_session_kills.id,
             COUNT(*) AS ranked_kills
@@ -41,12 +41,12 @@ CREATE VIEW character_ranked_kill_death AS
                 character.id,
                 session_killmail.session_id
             FROM character
-            LEFT JOIN session_killmail
+            INNER JOIN session_killmail
                 ON session_killmail.attacker_id = character.id
         ) distinct_character_session_kills
         GROUP BY distinct_character_session_kills.id        
     ) character_ranked_kills ON character_ranked_kills.id = c.id
-    INNER JOIN (
+    LEFT JOIN (
         SELECT
             distinct_character_session_deaths.id,
             COUNT(*) AS ranked_deaths
@@ -56,7 +56,7 @@ CREATE VIEW character_ranked_kill_death AS
                 character.id,
                 session_killmail.session_id
             FROM character
-            LEFT JOIN session_killmail
+            INNER JOIN session_killmail
                 ON session_killmail.victim_id = character.id
         ) distinct_character_session_deaths
         GROUP BY distinct_character_session_deaths.id        
@@ -82,11 +82,11 @@ CREATE VIEW guild_ranked_kill_death AS
     SELECT
         g.id,
         g.name,
-        guild_ranked_kills.ranked_kills,
-        guild_ranked_deaths.ranked_deaths,
+        COALESCE(guild_ranked_kills.ranked_kills, 0) AS ranked_kills,
+        COALESCE(guild_ranked_deaths.ranked_deaths, 0) AS ranked_deaths,
         g.season
     FROM guild g
-    INNER JOIN (
+    LEFT JOIN (
         SELECT
             distinct_guild_session_kills.id,
             COUNT(*) AS ranked_kills
@@ -96,12 +96,12 @@ CREATE VIEW guild_ranked_kill_death AS
                 guild.id,
                 session_killmail.session_id
             FROM guild
-            LEFT JOIN session_killmail
+            INNER JOIN session_killmail
                 ON session_killmail.attacker_guild_id = guild.id
         ) distinct_guild_session_kills
         GROUP BY distinct_guild_session_kills.id        
     ) guild_ranked_kills ON guild_ranked_kills.id = g.id
-    INNER JOIN (
+    LEFT JOIN (
         SELECT
             distinct_guild_session_deaths.id,
             COUNT(*) AS ranked_deaths
@@ -111,7 +111,7 @@ CREATE VIEW guild_ranked_kill_death AS
                 guild.id,
                 session_killmail.session_id
             FROM guild
-            LEFT JOIN session_killmail
+            INNER JOIN session_killmail
                 ON session_killmail.victim_guild_id = guild.id
         ) distinct_guild_session_deaths
         GROUP BY distinct_guild_session_deaths.id        

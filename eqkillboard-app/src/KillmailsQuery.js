@@ -66,7 +66,7 @@ fragment KillmailData on Killmail {
     name
   },
   killedAt,
-  killmailInvolvedsByKillmailId {
+  killmailInvolvedsByKillmailId(filter: {characterByAttackerId: {isNpc: {equalTo: false}}}) {
     totalCount
   }
 }
