@@ -21,9 +21,10 @@ const GET_TOPSTATS = gql`
 query allStats($season: Int) {
   allCharacters(condition: {season: $season}) {
     nodes {
-      nodeId,
-      id,
-      name,
+      nodeId
+      id
+      name
+      classId
       killmailsByAttackerId {
         totalCount
       }
@@ -31,9 +32,9 @@ query allStats($season: Int) {
   }
   allGuilds(condition: {season: $season}) {
     nodes {
-      nodeId,
-      id,
-      name,
+      nodeId
+      id
+      name
       killmailsByAttackerGuildId {
         totalCount
       }
@@ -47,12 +48,19 @@ query allStats($season: Int) {
       rankedDeaths
     }
   }
-  allCharacterRankedKillDeaths(first: 50, condition: {season: $season}, orderBy: RANKED_KILLS_DESC) {
+  allCharacterRankedKillDeaths(condition: {season: $season}, orderBy: RANKED_KILLS_DESC) {
     nodes {
       id
       name
+      classId
       rankedKills
       rankedDeaths
+    }
+  }
+  allClasses(orderBy: NAME_ASC) {
+    nodes {
+      id
+      name
     }
   }
 }

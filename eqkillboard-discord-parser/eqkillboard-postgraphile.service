@@ -4,7 +4,7 @@ AFTER=postgresql.service
 
 [Service]
 WorkingDirectory=/home/root/
-ExecStart=/usr/bin/postgraphile -c postgres://username:password@localhost/test --schema public --disable-default-mutations
+ExecStart=/usr/bin/postgraphile -c postgres://username:password@localhost/test --schema public --disable-default-mutations --enhance-graphiql
 Restart=always
 RestartSec=10
 SyslogIdentifier=eqkillboard-postgraphile
