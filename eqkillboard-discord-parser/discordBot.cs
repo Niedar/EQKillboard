@@ -142,10 +142,12 @@ namespace EQKillboard.DiscordParser
                     var existingRawKillMail = await dbService.GetRawKillMailAsync(message.Id);
                     if (existingRawKillMail != null)
                     {
-                        return;
+                        await dbService.InsertMissingKillMailInvolvedAsync(message, parsedKillmail);
                     }
-
-                    var insertedKillmail = await dbService.InsertRawAndParsedKillMailAsync(message, parsedKillmail);
+                    else
+                    {
+                        var insertedKillmail = await dbService.InsertRawAndParsedKillMailAsync(message, parsedKillmail);
+                    }
                 }
             }
             catch (Exception ex)

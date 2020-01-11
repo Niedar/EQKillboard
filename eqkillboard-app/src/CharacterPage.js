@@ -68,11 +68,11 @@ class CharacterPage extends Component {
                 {characterGuildHeader}
                 <Tabs defaultActiveKey="1">
                   <Tabs.TabPane tab="Ranked" key="1">
-                    <h2>Kills: {data.allCharacterRankedKillDeaths.nodes[0].rankedKills}</h2>
-                    <h2>Deaths: {data.allCharacterRankedKillDeaths.nodes[0].rankedDeaths}</h2>
+                    <h2>Kills: {data.allCharacterRankedKillDeathInvolveds.nodes[0].rankedKills}</h2>
+                    <h2>Deaths: {data.allCharacterRankedKillDeathInvolveds.nodes[0].rankedDeaths}</h2>
                   </Tabs.TabPane>
                   <Tabs.TabPane tab="Unranked" key="2">
-                    <h2>Kills: {data.characterById.killmailsByAttackerId.totalCount}</h2>
+                    <h2>Kills: {data.characterById.killmailInvolvedsByAttackerId.totalCount}</h2>
                     <h2>Deaths: {data.characterById.killmailsByVictimId.totalCount}</h2>
                   </Tabs.TabPane>
                 </Tabs>

@@ -18,7 +18,11 @@ namespace EQKillboard.DiscordParser.Parsers {
                                                 + @"\s(?<overDamage>.*)"
                                                 + @"\s*(?<involvedText>(?:.|\n)*)";
         
-        private const string InvolvedPattern = @"(?<attacker>.*)\s*contributed\s*(?:(?<meleeDamage1>\d*) melee damage across (?<meleeHit1>\d*) hits?|(?<spellDamage1>\d*) spell damage across (?<spellHit1>\d*) hits?)(?: and\s*(?:(?<meleeDamage2>\d*) melee damage across (?<meleeHit2>\d*) hits?|(?<spellDamage2>\d*) spell damage across (?<spellHit2>\d*) hits?)|\.)";
+        // private const string InvolvedPattern = @"(?<attacker>.*)\s*contributed\s*(?:(?<meleeDamage1>\d*) melee damage across (?<meleeHit1>\d*) hits?|(?<spellDamage1>\d*) spell damage across (?<spellHit1>\d*) hits?)(?: and\s*(?:(?<meleeDamage2>\d*) melee damage across (?<meleeHit2>\d*) hits?|(?<spellDamage2>\d*) spell damage across (?<spellHit2>\d*) hits?)|\.)";
+        private const string InvolvedPattern = @"(?<attacker>.*)\s*contributed\s(?<contribution>\s*.*).";
+        private const string MeleeDamagePattern = @"(?<meleeDamage>\d*) melee damage across (?<meleeHit>\d*) hits?";
+        private const string SpellDamagePattern = @"(?<spellDamage>\d*) spell damage across (?<spellHit>\d*) hits?";
+        private const string DispelPattern = @"(?<dispelSlots>\d*) slots? of dispels?";
                                                         
         public static async Task<ParsedKillMail> ParseKillmail(string input) {
             // Remove special formatting
@@ -103,32 +107,33 @@ namespace EQKillboard.DiscordParser.Parsers {
                             case "attacker":
                                 parsedInvolved.AttackerName = group.Value.Trim();
                                 break;
-                            case "meleeDamage1":
-                            case "meleeDamage2":
-                                if (int.TryParse(group.Value.Trim(), out var meleeDamage))
+                            case "contribution":
+                                var contributionText = group.Value.Trim();
+                                var meleeDamageMatch = Regex.Match(contributionText, MeleeDamagePattern)?.Groups.FirstOrDefault(x => x.Name == "meleeDamage");
+                                var meleeHitMatch = Regex.Match(contributionText, MeleeDamagePattern)?.Groups.FirstOrDefault(x => x.Name == "meleeHit");
+                                var spellDamageMatch = Regex.Match(contributionText, SpellDamagePattern)?.Groups.FirstOrDefault(x => x.Name == "spellDamage");
+                                var spellHitMatch = Regex.Match(contributionText, SpellDamagePattern)?.Groups.FirstOrDefault(x => x.Name == "spellHit");
+                                var dispelMatch = Regex.Match(contributionText, DispelPattern)?.Groups.FirstOrDefault(x => x.Name == "dispelSlots");
+                                
+                                if (meleeDamageMatch != null && int.TryParse(meleeDamageMatch.Value.Trim(), out var meleeDamage))
                                 {
                                     parsedInvolved.MeleeDamage = meleeDamage;
                                 }
-                                break;
-                            case "meleeHit1":
-                            case "meleeHit2":
-                                if (int.TryParse(group.Value.Trim(), out var meleeHits))
+                                if (meleeHitMatch != null && int.TryParse(meleeHitMatch.Value.Trim(), out var meleeHit))
                                 {
-                                    parsedInvolved.MeleeHits = meleeHits;
+                                    parsedInvolved.MeleeHits = meleeHit;
                                 }
-                                break;
-                            case "spellDamage1":
-                            case "spellDamage2":
-                                if (int.TryParse(group.Value.Trim(), out var spellDamage))
+                                if (spellDamageMatch != null && int.TryParse(spellDamageMatch.Value.Trim(), out var spellDamage))
                                 {
                                     parsedInvolved.SpellDamage = spellDamage;
                                 }
-                                break;
-                            case "spellHit1":
-                            case "spellHit2":
-                                if (int.TryParse(group.Value.Trim(), out var spellHits))
+                                if (spellHitMatch != null && int.TryParse(spellHitMatch.Value.Trim(), out var spellHit))
                                 {
-                                    parsedInvolved.SpellHits = spellHits;
+                                    parsedInvolved.SpellHits = spellHit;
+                                }
+                                if (dispelMatch != null && int.TryParse(dispelMatch.Value.Trim(), out var dispelSlots))
+                                {
+                                    parsedInvolved.DispelSlots = dispelSlots;
                                 }
                                 break;
                             default:

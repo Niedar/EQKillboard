@@ -9,3 +9,6 @@
 @v2.0.0 2020-01-03T23:07:15Z Niedar <Niedar@gmail.com> # Add support for new killmail data and support for multiple seasons
 
 0003_ranked_kill_stats [@v2.0.0] 2020-01-03T23:10:02Z Niedar <Niedar@gmail.com> # Add support for filtering killmails for ranked kill stats
+@v3.0.0 2020-01-10T20:10:24Z Niedar <Niedar@gmail.com> # Add support for filtering killmails for ranked kill stats
+
+0004_dispel_slots_involved_stats [@v3.0.0] 2020-01-10T20:12:22Z Niedar <Niedar@gmail.com> # Add dispel slots and calculate ranked kills based on involved kills instead of just on final blow

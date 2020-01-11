@@ -58,7 +58,7 @@ class HomePage extends Component {
             return (
               <div>
                 <h1 style={{marginLeft: "10px"}}>Leaderboard</h1>
-                <TopStats allCharacters={data.allCharacters} allGuilds={data.allGuilds} allCharacterRankedKillDeaths={data.allCharacterRankedKillDeaths} allGuildRankedKillDeaths={data.allGuildRankedKillDeaths} allClasses={data.allClasses} />
+                <TopStats allCharacters={data.allCharacters} allGuilds={data.allGuilds} allCharacterRankedKillDeathInvolveds={data.allCharacterRankedKillDeathInvolveds} allGuildRankedKillDeathInvolveds={data.allGuildRankedKillDeathInvolveds} allClasses={data.allClasses} />
               </div>
             );
         }}

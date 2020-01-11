@@ -28,7 +28,7 @@ class TopStats extends Component {
       }
     });
 
-    let topRankedCharacters = filter(this.props.allCharacterRankedKillDeaths.nodes, (character) => {
+    let topRankedCharacters = filter(this.props.allCharacterRankedKillDeathInvolveds.nodes, (character) => {
       if (this.state.selectedClassId == null) {
         return true;
       } else {
@@ -38,21 +38,21 @@ class TopStats extends Component {
 
 
     topCharacters = take(orderBy(topCharacters, [node => {
-        return node.killmailsByAttackerId.totalCount;
+        return node.killmailInvolvedsByAttackerId.totalCount;
     }], ["desc"]), 10);
     var topGuilds = take(orderBy(this.props.allGuilds.nodes, [node => {
-        return node.killmailsByAttackerGuildId.totalCount;
+        return node.kills;
     }], ["desc"]), 10);
 
     topRankedCharacters = take(topRankedCharacters, 10);
-    const topRankedGuilds =  take(this.props.allGuildRankedKillDeaths.nodes, 10);
+    const topRankedGuilds =  take(this.props.allGuildRankedKillDeathInvolveds.nodes, 10);
     const allClasses = this.props.allClasses.nodes;
 
 
     console.log(allClasses);
     return (
       <React.Fragment>
-      <Select placeholder="All characters" style={{ width: 200, marginLeft: 8}} allowClear={true} onChange={(value) => this.setState({selectedClassId: value})}>
+      <Select placeholder="All classes" style={{ width: 200, marginLeft: 8}} allowClear={true} onChange={(value) => this.setState({selectedClassId: value})}>
         {allClasses.map(item => (
           <Select.Option key={item.id} value={item.id}>
             {item.name}
@@ -91,7 +91,7 @@ class TopStats extends Component {
                   key="characterKilCount"
                   render={(text, record) => (
                     // TODO: This needs to be displayed in local time
-                    record.killmailsByAttackerId.totalCount
+                    record.killmailInvolvedsByAttackerId.totalCount
                   )}
                   width={75}
                 />
@@ -140,7 +140,7 @@ class TopStats extends Component {
                   key="guildKilledCount"
                   render={(text, record) => (
                     // TODO: This needs to be displayed in local time
-                    record.killmailsByAttackerGuildId.totalCount
+                    record.kills
                   )}
                   width={75}
                 />

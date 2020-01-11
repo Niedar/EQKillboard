@@ -67,6 +67,14 @@ fragment KillmailData on Killmail {
   },
   killedAt,
   killmailInvolvedsByKillmailId(filter: {characterByAttackerId: {isNpc: {equalTo: false}}}) {
+    nodes {
+      characterByAttackerId {
+        name
+      }
+      guildByAttackerGuildId {
+        name
+      }
+    }
     totalCount
   }
 }
@@ -91,7 +99,7 @@ const GET_ALLKILLMAILS = gql`
 
 const GET_CHARACTERKILLMAILS = gql`
   query characterKilmails($season: Int, $id: Int, $first: Int, $last: Int, $after: Cursor, $before: Cursor) {
-    allKillmails(condition: {season: $season}, filter: { or: [{ victimId: { equalTo: $id } }, { attackerId: { equalTo: $id} }] }, orderBy: KILLED_AT_DESC, first: $first, last: $last, after: $after, before: $before) {
+    allKillmails(condition: {season: $season}, filter: {or: [{victimId: {equalTo: $id}}, {killmailInvolvedsByKillmailId: {some: {attackerId: {equalTo: $id}}}}]}, orderBy: KILLED_AT_DESC, first: $first, last: $last, after: $after, before: $before) {
       nodes {
         ...KillmailData
       },
@@ -108,7 +116,7 @@ const GET_CHARACTERKILLMAILS = gql`
 
 const GET_GUILDKILLMAILS = gql`
   query guildKilmails($season: Int, $id: Int, $first: Int, $last: Int, $after: Cursor, $before: Cursor) {
-    allKillmails(condition: {season: $season}, filter: { or: [{ victimGuildId: { equalTo: $id } }, { attackerGuildId: { equalTo: $id} }] }, orderBy: KILLED_AT_DESC, first: $first, last: $last, after: $after, before: $before) {
+    allKillmails(condition: {season: $season}, filter: {or: [{victimGuildId: {equalTo: $id}}, {killmailInvolvedsByKillmailId: {some: {attackerGuildId: {equalTo: $id}}}}]}, orderBy: KILLED_AT_DESC, first: $first, last: $last, after: $after, before: $before) {
       nodes {
         ...KillmailData
       },

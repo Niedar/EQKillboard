@@ -19,13 +19,13 @@ export default class TopStatsQuery extends Component {
 
 const GET_TOPSTATS = gql`
 query allStats($season: Int) {
-  allCharacters(condition: {season: $season}) {
+  allCharacters(condition: {season: $season, isNpc: false}) {
     nodes {
       nodeId
       id
       name
       classId
-      killmailsByAttackerId {
+      killmailInvolvedsByAttackerId {
         totalCount
       }
     }
@@ -35,12 +35,10 @@ query allStats($season: Int) {
       nodeId
       id
       name
-      killmailsByAttackerGuildId {
-        totalCount
-      }
+      kills
     }
   }
-  allGuildRankedKillDeaths(first: 50, condition: {season: $season}, orderBy: RANKED_KILLS_DESC) {
+  allGuildRankedKillDeathInvolveds(first: 50, condition: {season: $season}, orderBy: RANKED_KILLS_DESC) {
     nodes {
       id
       name
@@ -48,7 +46,7 @@ query allStats($season: Int) {
       rankedDeaths
     }
   }
-  allCharacterRankedKillDeaths(condition: {season: $season}, orderBy: RANKED_KILLS_DESC) {
+  allCharacterRankedKillDeathInvolveds(condition: {season: $season, isNpc: false}, orderBy: RANKED_KILLS_DESC) {
     nodes {
       id
       name

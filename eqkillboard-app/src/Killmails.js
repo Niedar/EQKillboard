@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Table, Tag } from 'antd';
+import { Table, Tag, Popover } from 'antd';
 import moment from 'moment';
 import groupBy from 'lodash/groupBy';
 import { Link } from 'react-router-dom';
@@ -25,38 +25,55 @@ class Killmails extends Component {
   onRow = (record, index) => {
     var style = {};
     if (this.props.characterId) {
-      if (record.characterByAttackerId.id.toString() === this.props.characterId) {
-        style.backgroundColor = killColor;
-      } else if (record.characterByVictimId.id.toString() === this.props.characterId) {
+      if (record.characterByVictimId.id.toString() === this.props.characterId) {
         style.backgroundColor = deathColor;
+      } else {
+        style.backgroundColor = killColor;
       }
     } else if (this.props.guildId) {
-      if (record.guildByAttackerGuildId && record.guildByAttackerGuildId.id.toString() === this.props.guildId) {
-        style.backgroundColor = killColor;
-      } else if (record.guildByVictimGuildId && record.guildByVictimGuildId.id.toString() === this.props.guildId) {
+      if (record.guildByVictimGuildId && record.guildByVictimGuildId.id.toString() === this.props.guildId) {
         style.backgroundColor = deathColor;
+      } else {
+        style.backgroundColor = killColor;
       }
     }
     return {
       style: style
     };
   }
-
-  othersTag = (count) => {
-    if (count == 0 || count == 1) {
-      return (
-        <Tag color="#87d068">Solo</Tag>
-      )
+  
+  othersTagWithPopover = (killmailInvolvedsByKillmailId) => {
+    const count = killmailInvolvedsByKillmailId.totalCount;
+    const othersTag = () => {
+      if (count == 0 || count == 1) {
+        return (
+          <Tag color="#87d068">Solo</Tag>
+        )
+      }
+      if (count == 2) {
+        return (
+          <Tag color="geekblue">{count - 1} other</Tag>
+        )
+      } else {
+        return (
+          <Tag color="geekblue">{count - 1} others</Tag>
+        )
+      }
     }
-    if (count == 2) {
-      return (
-        <Tag color="geekblue">{count - 1} other</Tag>
-      )
-    } else {
-      return (
-        <Tag color="geekblue">{count - 1} others</Tag>
-      )
-    }
+    const content = (
+      <div>
+        {killmailInvolvedsByKillmailId.nodes.map(node => {
+          return (
+          <div>{node.characterByAttackerId.name} {node.guildByAttackerGuildId ? `<${node.guildByAttackerGuildId.name}>` : ''}</div>
+          )
+        })}
+      </div>
+    );
+    return (
+      <Popover content={content} trigger="click">
+        {othersTag()}
+      </Popover>
+    )
   }
 
   render() {
@@ -140,7 +157,7 @@ class Killmails extends Component {
 
                   return (
                     <React.Fragment>
-                        {characterElement} {this.othersTag(record.killmailInvolvedsByKillmailId.totalCount)}
+                        {characterElement} {this.othersTagWithPopover(record.killmailInvolvedsByKillmailId)}
                         <br />
                         {guildElement}
                     </React.Fragment>          

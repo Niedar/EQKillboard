@@ -31,11 +31,14 @@ query characterInfo($characterId: Int!) {
     killmailsByAttackerId {
       totalCount
     },
+    killmailInvolvedsByAttackerId {
+      totalCount
+    },
     killmailsByVictimId {
       totalCount
     }
   }
-  allCharacterRankedKillDeaths(condition: {id: $characterId}) {
+  allCharacterRankedKillDeathInvolveds(condition: {id: $characterId}) {
     nodes {
       id
       name

@@ -61,11 +61,11 @@ class GuildPage extends Component {
                 <h1>{data.guildById.name}</h1>
                 <Tabs defaultActiveKey="1">
                 <Tabs.TabPane tab="Ranked" key="1">
-                    <h2>Kills: {data.allGuildRankedKillDeaths.nodes[0].rankedKills}</h2>
-                    <h2>Deaths: {data.allGuildRankedKillDeaths.nodes[0].rankedDeaths}</h2>
+                    <h2>Kills: {data.allGuildRankedKillDeathInvolveds.nodes[0].rankedKills}</h2>
+                    <h2>Deaths: {data.allGuildRankedKillDeathInvolveds.nodes[0].rankedDeaths}</h2>
                   </Tabs.TabPane>
                   <Tabs.TabPane tab="Unranked" key="2">
-                    <h2>Kills: {data.guildById.killmailsByAttackerGuildId.totalCount}</h2>
+                    <h2>Kills: {data.guildById.kills}</h2>
                     <h2>Deaths: {data.guildById.killmailsByVictimGuildId.totalCount}</h2>
                   </Tabs.TabPane>
                 </Tabs>

@@ -13,6 +13,9 @@ namespace EQKillboard.DiscordParser.Entities {
         public int zone_id { get; internal set; }
         public DateTime killed_at { get; set; }
         public int killmail_raw_id { get; set; }
+        public int? looted_item { get; set;}
+        public int? looted_by { get; set;}
+        public int season { get; set; }
         public List<KillmailInvolved> Involved { get; set;} = new List<KillmailInvolved>();
     }
 
@@ -26,5 +29,6 @@ namespace EQKillboard.DiscordParser.Entities {
         public int? melee_hits { get; set; }
         public int? spell_damage { get; set; }
         public int? spell_hits { get; set; }
+        public int? dispel_slots {get; set;}
     }
 }

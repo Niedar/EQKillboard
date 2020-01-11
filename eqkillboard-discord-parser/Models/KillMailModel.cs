@@ -29,5 +29,6 @@ namespace EQKillboard.DiscordParser.Models {
         public int? MeleeHits { get; set; }
         public int? SpellDamage { get; set; }
         public int? SpellHits { get; set; }
+        public int? DispelSlots { get; set; }
     }
 }
