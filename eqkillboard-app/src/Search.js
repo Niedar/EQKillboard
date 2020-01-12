@@ -117,13 +117,13 @@ class Search extends React.Component {
 
 const GET_SEARCHALL = gql`
 query searchAll($season: Int, $searchText: String) {
-    searchCharacters(season: $season, search: $searchText, filter: {season: {equalTo: $season}}) {
+    searchCharacters(season: $season, search: $searchText, filter: {season: {equalTo: $season}, isNpc: {equalTo: false}}) {
       nodes {
         id,
         name
       }
     },
-    searchGuilds(season: $season, search: $searchText, filter: {season: {equalTo: $season}}) {
+    searchGuilds(season: $season, search: $searchText, filter: {season: {equalTo: $season}, isNpc: {equalTo: false}}) {
       nodes {
         id,
         name
