@@ -123,7 +123,7 @@ query searchAll($season: Int, $searchText: String) {
         name
       }
     },
-    searchGuilds(season: $season, search: $searchText, filter: {season: {equalTo: $season}, isNpc: {equalTo: false}}) {
+    searchGuilds(season: $season, search: $searchText, filter: {season: {equalTo: $season}}) {
       nodes {
         id,
         name
