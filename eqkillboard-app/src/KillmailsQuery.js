@@ -7,7 +7,7 @@ export default class KillmailsQuery extends Component {
   static contextType = SeasonContext;
 
   render() {
-    const { characterId, guildId, zoneId, children, after, before } = this.props;
+    const { characterId, guildId, zoneId, children, after, before, onCompleted } = this.props;
     const season = this.context;
     var query;
     var id, first, last;
@@ -32,7 +32,7 @@ export default class KillmailsQuery extends Component {
     }
 
     return (
-      <Query query={query} variables={{ season, id, first, last, after, before }}>
+      <Query query={query} variables={{ season, id, first, last, after, before }} onCompleted={onCompleted}>
         {result => children(result)}
       </Query>
     )

@@ -6,11 +6,11 @@ import { SeasonContext } from "./SeasonContext"
 export default class TopStatsQuery extends Component {
   static contextType = SeasonContext;
   render() {
-    const { children } = this.props
+    const { children, onCompleted } = this.props
     const season = this.context;
 
     return (
-      <Query query={GET_TOPSTATS} variables={{ season }}>
+      <Query query={GET_TOPSTATS} variables={{ season }} onCompleted={onCompleted}>
         {result => children(result)}
       </Query>
     )

@@ -47,12 +47,19 @@ const getPaginationButtons = (pageInfo, season) => {
 
 class HomePage extends Component {
   static contextType = SeasonContext;
+  constructor(props) {
+    super(props);
+    this.state = {
+      loadingKillmails: true,
+    };
+  }
   render() {
     return (
       <React.Fragment>
         <TopStatsQuery>
         {({ loading, error, data}) => {
-            if (loading) return null;
+            if (loading && this.state.loadingKillmails) return null;
+            if (loading && !this.state.loadingKillmails) return <Spin size="large" />;
             if (error) return `Error! ${error.message}`;
             
             return (
@@ -66,6 +73,7 @@ class HomePage extends Component {
         <KillmailsQuery
           before={this.props.match.params.cursorDirection === "before" ? this.props.match.params.cursor : null}
           after={this.props.match.params.cursorDirection === "after" ? this.props.match.params.cursor : null}
+          onCompleted={() => this.setState({loadingKillmails: false})}
         >
         {({ loading, error, data}) => {
             if (loading) return <Spin size="large" />;
