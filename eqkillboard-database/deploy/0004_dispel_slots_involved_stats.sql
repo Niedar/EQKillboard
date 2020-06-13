@@ -37,7 +37,7 @@ CREATE VIEW character_ranked_kill_death_involved AS
     LEFT JOIN (
         SELECT
             distinct_character_session_kills.id,
-            COUNT(*) AS ranked_kills
+            CAST(COUNT(*) AS INTEGER) AS ranked_kills
         FROM (
             SELECT
                 DISTINCT ON (character.id, session_killmail.session_id)
@@ -54,7 +54,7 @@ CREATE VIEW character_ranked_kill_death_involved AS
     LEFT JOIN (
         SELECT
             distinct_character_session_deaths.id,
-            COUNT(*) AS ranked_deaths
+            CAST(COUNT(*) AS INTEGER) AS ranked_deaths
         FROM (
             SELECT
                 DISTINCT ON (character.id, session_killmail.session_id)
@@ -94,7 +94,7 @@ CREATE VIEW guild_ranked_kill_death_involved AS
     LEFT JOIN (
         SELECT
             distinct_guild_session_kills.id,
-            COUNT(*) AS ranked_kills
+            CAST(COUNT(*) AS INTEGER) AS ranked_kills
         FROM (
             SELECT
                 DISTINCT ON (guild.id, session_killmail.session_id)
@@ -111,7 +111,7 @@ CREATE VIEW guild_ranked_kill_death_involved AS
     LEFT JOIN (
         SELECT
             distinct_guild_session_deaths.id,
-            COUNT(*) AS ranked_deaths
+            CAST(COUNT(*) AS INTEGER) AS ranked_deaths
         FROM (
             SELECT
                 DISTINCT ON (guild.id, session_killmail.session_id)

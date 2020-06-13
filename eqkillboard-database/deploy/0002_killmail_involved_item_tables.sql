@@ -48,7 +48,7 @@ SELECT
     season,
     AVG(price) AS average_price,
     MAX(price) AS max_price,
-    COUNT(item_id) AS total_sales
+    CAST(COUNT(item_id) AS INTEGER) AS total_sales
 FROM item_sale
 GROUP BY item_id, season;
 
