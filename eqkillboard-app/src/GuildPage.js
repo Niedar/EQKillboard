@@ -45,6 +45,10 @@ const getPaginationButtons = (pageInfo, baseUrl) => {
   );
 };
 
+function calculateKDR(kills, deaths) {
+  return deaths === 0 ? kills.toFixed(1) : (kills / deaths).toFixed(1);
+}
+
 class GuildPage extends Component {
   static contextType = SeasonContext;
   render() {
@@ -61,10 +65,12 @@ class GuildPage extends Component {
                 <h1>{data.guildById.name}</h1>
                 <Tabs defaultActiveKey="1">
                 <Tabs.TabPane tab="Ranked" key="1">
+                    <h2>K/D Ratio: {calculateKDR(data.allGuildRankedKillDeathInvolveds.nodes[0].rankedKills, data.allGuildRankedKillDeathInvolveds.nodes[0].rankedDeaths)}</h2>
                     <h2>Kills: {data.allGuildRankedKillDeathInvolveds.nodes[0].rankedKills}</h2>
                     <h2>Deaths: {data.allGuildRankedKillDeathInvolveds.nodes[0].rankedDeaths}</h2>
                   </Tabs.TabPane>
                   <Tabs.TabPane tab="Unranked" key="2">
+                    <h2>K/D Ratio: {calculateKDR(data.guildById.kills, data.guildById.killmailsByVictimGuildId.totalCount)}</h2>
                     <h2>Kills: {data.guildById.kills}</h2>
                     <h2>Deaths: {data.guildById.killmailsByVictimGuildId.totalCount}</h2>
                   </Tabs.TabPane>

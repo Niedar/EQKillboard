@@ -45,6 +45,10 @@ const getPaginationButtons = (pageInfo, baseUrl) => {
   );
 };
 
+function calculateKDR(kills, deaths) {
+  return deaths === 0 ? kills.toFixed(1) : (kills / deaths).toFixed(1);
+}
+
 class CharacterPage extends Component {
   static contextType = SeasonContext;
   render() {
@@ -68,10 +72,12 @@ class CharacterPage extends Component {
                 {characterGuildHeader}
                 <Tabs defaultActiveKey="1">
                   <Tabs.TabPane tab="Ranked" key="1">
+                    <h2>K/D Ratio: {calculateKDR(data.allCharacterRankedKillDeathInvolveds.nodes[0].rankedKills, data.allCharacterRankedKillDeathInvolveds.nodes[0].rankedDeaths)}</h2>
                     <h2>Kills: {data.allCharacterRankedKillDeathInvolveds.nodes[0].rankedKills}</h2>
                     <h2>Deaths: {data.allCharacterRankedKillDeathInvolveds.nodes[0].rankedDeaths}</h2>
                   </Tabs.TabPane>
                   <Tabs.TabPane tab="Unranked" key="2">
+                    <h2>K/D Ratio: {calculateKDR(data.characterById.killmailInvolvedsByAttackerId.totalCount, data.characterById.killmailsByVictimId.totalCount)}</h2>
                     <h2>Kills: {data.characterById.killmailInvolvedsByAttackerId.totalCount}</h2>
                     <h2>Deaths: {data.characterById.killmailsByVictimId.totalCount}</h2>
                   </Tabs.TabPane>

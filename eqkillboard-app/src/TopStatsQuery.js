@@ -38,7 +38,7 @@ query allStats($season: Int) {
       kills
     }
   }
-  allGuildRankedKillDeathInvolveds(first: 50, condition: {season: $season}, orderBy: RANKED_KILLS_DESC) {
+  allGuildRankedKillDeathInvolveds(condition: {season: $season}, orderBy: RANKED_KILLS_DESC) {
     nodes {
       id
       name
