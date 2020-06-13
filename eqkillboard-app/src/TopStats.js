@@ -9,7 +9,7 @@ import { SeasonContext } from './SeasonContext';
 const { Column } = Table;
 
 function calculateKDR(kills, deaths) {
-  return deaths === 0 || kills === 0 ? kills.toFixed(1) : (kills / deaths).toFixed(1);
+  return deaths == 0 || kills == 0 ? kills.toFixed(1) : (kills / deaths).toFixed(1);
 }
 
 class TopStats extends Component {
