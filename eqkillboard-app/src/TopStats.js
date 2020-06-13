@@ -9,7 +9,7 @@ import { SeasonContext } from './SeasonContext';
 const { Column } = Table;
 
 function calculateKDR(kills, deaths) {
-  return deaths === 0 ? kills.toFixed(1) : (kills / deaths).toFixed(1);
+  return deaths === 0 || kills === 0 ? kills.toFixed(1) : (kills / deaths).toFixed(1);
 }
 
 class TopStats extends Component {
@@ -48,13 +48,13 @@ class TopStats extends Component {
     }], ["desc"]), 10);
     
     const topRankedCharactersKDA = take(orderBy(topRankedCharacters, [node => {
-      return node.rankedDeaths === 0 ? node.rankedKills : (node.rankedKills / node.rankedDeaths);
+      return node.rankedDeaths === 0 || node.rankedKills === 0 ? node.rankedKills : (node.rankedKills / node.rankedDeaths);
     }], ["desc"]), 10);
     topRankedCharacters = take(topRankedCharacters, 10);
 
     const topRankedGuilds =  take(this.props.allGuildRankedKillDeathInvolveds.nodes, 10);
     const topRankedGuildsKDA = take(orderBy(topRankedGuilds, [node => {
-      return node.rankedDeaths === 0 ? node.rankedKills : (node.rankedKills / node.rankedDeaths);
+      return node.rankedDeaths === 0 || node.rankedKills === 0 ? node.rankedKills : (node.rankedKills / node.rankedDeaths);
     }], ["desc"]), 10);
     
     const allClasses = this.props.allClasses.nodes;
