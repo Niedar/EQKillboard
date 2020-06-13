@@ -60,6 +60,34 @@ namespace EQKillboard.DiscordParser.Db
             }
         }
 
+        public async Task InsertMissingKillMailInvolvedAsync(IMessage discordMessage, ParsedKillMail parsedKillMail)
+        {
+            using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) 
+            {
+                connection.Open();
+                using (var killmailTransaction = connection.BeginTransaction()) {
+                    try
+                    {
+                        var killmail = await GetKillmailAsync(discordMessage.Id);
+                        if (killmail != null && parsedKillMail.Involved != null)
+                        {
+                            foreach (var involved in parsedKillMail.Involved)
+                            {
+                                await InsertParsedKillMailInvolved(connection, killmail, involved);
+                            }
+                        }
+                        killmailTransaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex);
+                        killmailTransaction.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+
         private async Task<RawKillMail> InsertRawKillmailAsync(IDbConnection connection, IMessage discordMessage)
         {
             Console.WriteLine(discordMessage.Content.ToString());
@@ -140,10 +168,12 @@ namespace EQKillboard.DiscordParser.Db
             killMailInvolvedToInsert.melee_hits = involved.MeleeHits;
             killMailInvolvedToInsert.spell_damage = involved.SpellDamage;
             killMailInvolvedToInsert.spell_hits = involved.SpellHits;
+            killMailInvolvedToInsert.dispel_slots = involved.DispelSlots;
 
             var insertQuery = 
-            @"INSERT INTO killmail_involved (killmail_id, attacker_id, attacker_guild_id, attacker_level, melee_damage, melee_hits, spell_damage, spell_hits)
-            VALUES (@killmail_id, @attacker_id, @attacker_guild_id, @attacker_level, @melee_damage, @melee_hits, @spell_damage, @spell_hits)
+            @"INSERT INTO killmail_involved (killmail_id, attacker_id, attacker_guild_id, attacker_level, melee_damage, melee_hits, spell_damage, spell_hits, dispel_slots)
+            VALUES (@killmail_id, @attacker_id, @attacker_guild_id, @attacker_level, @melee_damage, @melee_hits, @spell_damage, @spell_hits, @dispel_slots)
+            ON CONFLICT (killmail_id, attacker_id) DO NOTHING;
             ";
 
             await connection.ExecuteAsync(insertQuery, killMailInvolvedToInsert);
@@ -297,6 +327,32 @@ namespace EQKillboard.DiscordParser.Db
                 FROM killmail_raw 
                 WHERE discord_message_id = @messageId";
                 return await connection.QueryFirstOrDefaultAsync<RawKillMail>(selectRawKillmailSql, new { messageId = discordMessageId });
+            }
+        }
+
+        public async Task<Killmail> GetKillmailAsync(decimal discordMessageId)
+        {
+            using(var connection = DatabaseConnection.CreateConnection(DbConnectionString)) {
+                const string selectRawKillmailSql = @"
+                SELECT
+                    k.id,
+                    k.victim_id,
+                    k.victim_guild_id,
+                    k.victim_level,
+                    k.attacker_id,
+                    k.attacker_guild_id,
+                    k.attacker_level,
+                    k.zone_id,
+                    k.killed_at,
+                    k.killmail_raw_id,
+                    k.looted_item,
+                    k.looted_by,
+                    k.season
+                FROM killmail k
+                INNER JOIN killmail_raw
+                    ON killmail_raw.id = k.killmail_raw_id 
+                WHERE killmail_raw.discord_message_id = @messageId";
+                return await connection.QueryFirstOrDefaultAsync<Killmail>(selectRawKillmailSql, new { messageId = discordMessageId });
             }
         }
     }

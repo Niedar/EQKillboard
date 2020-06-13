@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import KillmailsQuery from './KillmailsQuery';
 import CharacterInfoQuery from './CharacterInfoQuery';
 import Killmails from './Killmails';
-import { Button, Icon } from 'antd';
+import { Button, Icon, Tabs } from 'antd';
 import { Spin, Row, Col } from 'antd';
 import { SeasonContext } from './SeasonContext';
 
@@ -51,7 +51,7 @@ class CharacterPage extends Component {
     const season = this.context;
     return (
       <React.Fragment>
-        <CharacterInfoQuery characterId={this.props.match.params.characterId}>
+        <CharacterInfoQuery characterId={parseInt(this.props.match.params.characterId)}>
         {({ loading, error, data}) => {
             if (loading) return null;
             if (error) return `Error! ${error.message}`;
@@ -66,8 +66,16 @@ class CharacterPage extends Component {
             return (
               <div style={{marginLeft: "10px"}}>
                 {characterGuildHeader}
-                <h2>Kills: {data.characterById.killmailsByAttackerId.totalCount}</h2>
-                <h2>Deaths: {data.characterById.killmailsByVictimId.totalCount}</h2>
+                <Tabs defaultActiveKey="1">
+                  <Tabs.TabPane tab="Ranked" key="1">
+                    <h2>Kills: {data.allCharacterRankedKillDeathInvolveds.nodes[0].rankedKills}</h2>
+                    <h2>Deaths: {data.allCharacterRankedKillDeathInvolveds.nodes[0].rankedDeaths}</h2>
+                  </Tabs.TabPane>
+                  <Tabs.TabPane tab="Unranked" key="2">
+                    <h2>Kills: {data.characterById.killmailInvolvedsByAttackerId.totalCount}</h2>
+                    <h2>Deaths: {data.characterById.killmailsByVictimId.totalCount}</h2>
+                  </Tabs.TabPane>
+                </Tabs>
               </div>
             );
         }}
@@ -75,7 +83,7 @@ class CharacterPage extends Component {
         <KillmailsQuery
           before={this.props.match.params.cursorDirection === "before" ? this.props.match.params.cursor : null}
           after={this.props.match.params.cursorDirection === "after" ? this.props.match.params.cursor : null}
-          characterId={this.props.match.params.characterId}
+          characterId={parseInt(this.props.match.params.characterId)}
         >
         {({ loading, error, data}) => {
             if (loading) return <Spin size="large" />;

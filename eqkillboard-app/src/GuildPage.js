@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import KillmailsQuery from './KillmailsQuery';
 import GuildInfoQuery from './GuildInfoQuery';
 import Killmails from './Killmails';
-import { Button, Icon } from 'antd';
+import { Button, Icon, Tabs } from 'antd';
 import { Spin, Row, Col } from 'antd';
 import { SeasonContext } from './SeasonContext';
 
@@ -51,7 +51,7 @@ class GuildPage extends Component {
     const season = this.context;
     return (
       <React.Fragment>
-        <GuildInfoQuery guildId={this.props.match.params.guildId}>
+        <GuildInfoQuery guildId={parseInt(this.props.match.params.guildId)}>
         {({ loading, error, data}) => {
             if (loading) return null;
             if (error) return `Error! ${error.message}`;
@@ -59,8 +59,16 @@ class GuildPage extends Component {
             return (
               <div style={{marginLeft: "10px"}}>
                 <h1>{data.guildById.name}</h1>
-                <h2>Kills: {data.guildById.killmailsByAttackerGuildId.totalCount}</h2>
-                <h2>Deaths: {data.guildById.killmailsByVictimGuildId.totalCount}</h2>
+                <Tabs defaultActiveKey="1">
+                <Tabs.TabPane tab="Ranked" key="1">
+                    <h2>Kills: {data.allGuildRankedKillDeathInvolveds.nodes[0].rankedKills}</h2>
+                    <h2>Deaths: {data.allGuildRankedKillDeathInvolveds.nodes[0].rankedDeaths}</h2>
+                  </Tabs.TabPane>
+                  <Tabs.TabPane tab="Unranked" key="2">
+                    <h2>Kills: {data.guildById.kills}</h2>
+                    <h2>Deaths: {data.guildById.killmailsByVictimGuildId.totalCount}</h2>
+                  </Tabs.TabPane>
+                </Tabs>
               </div>
             );
         }}
@@ -68,7 +76,7 @@ class GuildPage extends Component {
         <KillmailsQuery
           before={this.props.match.params.cursorDirection === "before" ? this.props.match.params.cursor : null}
           after={this.props.match.params.cursorDirection === "after" ? this.props.match.params.cursor : null}
-          guildId={this.props.match.params.guildId}
+          guildId={parseInt(this.props.match.params.guildId)}
         >
         {({ loading, error, data}) => {
             if (loading) return <Spin size="large" />;

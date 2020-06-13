@@ -5940,7 +5940,6 @@ BLpet45
 BLpet47
 BLpet49
 BLpet51
-Blue
 Blugtigin
 Blumblum Swigwater
 Blyle Bundin
@@ -11849,7 +11848,6 @@ Raider Watchman
 RaidMisc
 RaidStopper
 Raien Talikar
-Rain
 Raine Beteria
 Raisin
 Rajyk
@@ -12991,9 +12989,6 @@ Solusek Ro
 Solvedi Aldeberan
 Some
 some other piece
-Something
-Something
-Something
 Something dark
 Something seems
 sonic bat
@@ -14622,7 +14617,6 @@ Wevil Doughbeard
 Weyen Stonetrader
 Weyrevar Bluehammer
 wharf rat
-What
 Whes Nareya
 Whimsy Larktwitter
 whisper

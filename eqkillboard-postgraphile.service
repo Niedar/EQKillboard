@@ -3,6 +3,8 @@ Description=The postgraphile service used to serve as the graphQL API for eqkill
 AFTER=postgresql.service
 
 [Service]
+#.postgrapgilerc.js file should exist in the WorkingDirectory
+WorkingDirectory=/opt/eqkillboard-postgraphile
 ExecStart=/usr/bin/postgraphile --append-plugins postgraphile-plugin-connection-filter -c postgres://username:password@localhost/eqkillboard --schema public --disable-default-mutations
 Restart=always
 RestartSec=10
